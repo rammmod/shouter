@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Rhinero.Shouter": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

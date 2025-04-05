@@ -1,0 +1,76 @@
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+trigger:
+ branches:
+   include:
+     - Development-7.0
+ paths:
+   exclude:
+     - Converse*.yml
+   include:
+     - 'Converse.Screamer.Shared'
+     - 'Converse.Screamer.Client'
+pool:
+  name: CDigital
+  demands: Agent.Name -equals AG01.dev.cdigital.am
+
+variables:
+  Configuration: 'Release'
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+stages:
+- stage: BuildandPublish
+  displayName: Build and Publish Converse.Screamer.Client
+  jobs:
+      - job: BuildandPublishLatestVersions
+        displayName: 'Build and Publish latest versions'
+        workspace:
+          clean: all
+        steps:
+
+        - task: NuGetToolInstaller@0
+          inputs:
+             versionSpec: '6.5.0'
+                
+        - task: UseDotNet@2
+          displayName: 'Install .NET Core SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '7.0.x'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Restore Project'
+          inputs:
+            command: 'restore'
+            projects: '**/Converse.Screamer.Client/Converse.Screamer.Client.csproj'
+            feedsToUse: 'select'
+            vstsFeed: 'c1a2aa63-22d7-410e-b113-113e2717cfe4/f9c98f2a-d2bb-40be-bca9-d485b538a156'
+            arguments: '--configuration $(Configuration)'
+
+        - task: DotNetCoreCLI@2
+          displayName: 'Build project'
+          inputs:
+            command: 'build'
+            projects: '**/Converse.Screamer.Client/Converse.Screamer.Client.csproj'
+            arguments: '--configuration $(Configuration)'
+        
+        - task: DotNetCoreCLI@2
+          displayName: 'Pack Project'
+          inputs:
+            command: 'pack'
+            packagesToPack: '**/Converse.Screamer.Client/Converse.Screamer.Client.csproj'
+            versioningScheme: 'byPrereleaseNumber'
+            majorVersion: '1'
+            minorVersion: '0'
+            patchVersion: '0'
+
+        - task: DotNetCoreCLI@2
+          displayName: Push Package
+          inputs:
+            command: 'push'
+            packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+            nuGetFeedType: 'internal'
+            publishVstsFeed: 'c1a2aa63-22d7-410e-b113-113e2717cfe4/f9c98f2a-d2bb-40be-bca9-d485b538a156'

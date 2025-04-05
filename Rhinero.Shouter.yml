@@ -1,0 +1,87 @@
+trigger:
+ branches:
+   include:
+     - develop
+ paths:
+   include:
+     - 'Rhinero.Shouter'
+   exclude:
+     - Rhinero*.yml
+
+pool:
+  name: **pool name**
+  demands: Agent.Name -equals **agent name**
+
+variables:
+  Configuration: 'Release'
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+stages:
+- stage: BuildAndPublish
+  displayName: Build and Publish Rhinero.Shouter
+  jobs:
+      - job: BuildAndPublishLatestVersions
+        displayName: Build and Publish latest versions
+        steps:
+        - task: UseDotNet@2
+          displayName: 'Install .NET Core SDK'
+          inputs:
+            packageType: 'sdk'
+            version: '8.0.x'
+        - task: DotNetCoreCLI@2
+          displayName: New Manifest for EF tool
+          inputs:
+            command: custom
+            custom: 'new '
+            arguments: tool-manifest
+        - task: DotNetCoreCLI@2
+          displayName: Install EF Tool
+          inputs:
+            command: custom
+            custom: 'tool '
+            arguments: install dotnet-ef
+        - task: DotNetCoreCLI@2
+          displayName: Dotnet Restore
+          inputs:
+            command: 'restore'
+            feedsToUse: 'select'
+            vstsFeed: 'c1a2aa63-22d7-410e-b113-113e2717cfe4/f9c98f2a-d2bb-40be-bca9-d485b538a156'
+            arguments: '--configuration $(Configuration)'
+        - task: DotNetCoreCLI@2
+          displayName: 'Build Converse.Screamer.Api'
+          inputs:
+            command: 'build'
+            projects: '**/Converse.Screamer/Converse.Screamer.csproj'
+            arguments: '--configuration $(Configuration)'
+        - task: DotNetCoreCLI@2
+          displayName: 'Publish to Artifact Converse.Screamer.Api'
+          inputs:
+            command: 'publish'
+            publishWebProjects: false
+            projects: '**/Converse.Screamer/Converse.Screamer.csproj'
+            arguments: '--runtime linux-x64 --framework net7.0 --output $(Build.ArtifactStagingDirectory)'
+            zipAfterPublish: false
+        - task: SSH@0
+          displayName: 'Stoping Converse.Screamer.Api Service'
+          inputs:
+            sshEndpoint: 'Screamer'
+            runOptions: 'commands'
+            commands: 'sudo systemctl stop Screamer.Api'
+            readyTimeout: '20000'
+        - task: CopyFilesOverSSH@0
+          displayName: 'Copy Converse.Screamer files to server'
+          inputs:
+            sshEndpoint: 'Screamer'
+            sourceFolder: '$(Build.ArtifactStagingDirectory)/Converse.Screamer'
+            contents: '**'
+            targetFolder: 'Converse.Screamer'
+            cleanTargetFolder: true
+            readyTimeout: '20000'
+        - task: SSH@0
+          displayName: 'Starting Screamer.Api Service'
+          inputs:
+            sshEndpoint: 'Screamer'
+            runOptions: 'commands'
+            commands: 'sudo systemctl start Screamer.Api'
+            readyTimeout: '20000'
