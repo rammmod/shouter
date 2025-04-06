@@ -33,9 +33,6 @@ namespace Rhinero.Shouter.Client
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
-                        cfg.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable - move to consumer api
-                        cfg.UseInMemoryOutbox();
-
                         cfg.Host(shouterRabbitMQConfiguration.Hostname, shouterRabbitMQConfiguration.Port, shouterRabbitMQConfiguration.VirtualHost, h =>
                         {
                             if (!string.IsNullOrWhiteSpace(shouterRabbitMQConfiguration.UserName))
