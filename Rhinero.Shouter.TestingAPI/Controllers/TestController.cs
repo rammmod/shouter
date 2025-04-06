@@ -25,7 +25,7 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             var httpMessage = new HttpPayload()
             {
                 Uri = new Uri("https://google.com"),
-                Method = ShouterHttpMethod.Get
+                Method = HttpMethod.Get
             };
 
             var grpcMessage = new GrpcPayload()
