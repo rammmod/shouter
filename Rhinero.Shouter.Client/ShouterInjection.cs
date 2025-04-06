@@ -1,10 +1,11 @@
-﻿using Rhinero.Shouter.Shared.Contracts;
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RabbitMQ.Client;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Rhinero.Shouter.Client.Buses;
+using RabbitMQ.Client;
+using Rhinero.Shouter.Contracts;
+using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.IBuses;
 using ShouterConfiguration = Rhinero.Shouter.Client.Configuration.Shouter;
 
 namespace Rhinero.Shouter.Client
@@ -21,6 +22,9 @@ namespace Rhinero.Shouter.Client
             var shouterKafkaConfiguration =
                 configuration.GetSection(nameof(ShouterConfiguration)).Get<ShouterConfiguration>()?.Kafka;
 
+            if (shouterRabbitMQConfiguration is null && shouterKafkaConfiguration is null)
+                throw new ShouterBusConfigurationException();
+
             if (shouterRabbitMQConfiguration is not null)
             {
                 services.AddMassTransit<IShouterRabbitMQBus>(x =>
@@ -29,23 +33,26 @@ namespace Rhinero.Shouter.Client
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
-                        cfg.UseMessageRetry(r => r.Interval(10, 1));
+                        cfg.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable - move to consumer api
                         cfg.UseInMemoryOutbox();
 
                         cfg.Host(shouterRabbitMQConfiguration.Hostname, shouterRabbitMQConfiguration.Port, shouterRabbitMQConfiguration.VirtualHost, h =>
                         {
-                            h.Username(shouterRabbitMQConfiguration.UserName);
-                            h.Password(shouterRabbitMQConfiguration.Password);
+                            if (!string.IsNullOrWhiteSpace(shouterRabbitMQConfiguration.UserName))
+                                h.Username(shouterRabbitMQConfiguration.UserName);
+
+                            if (!string.IsNullOrWhiteSpace(shouterRabbitMQConfiguration.Password))
+                                h.Password(shouterRabbitMQConfiguration.Password);
                         });
 
-                        cfg.Publish(typeof(ShouterEvent), x =>
+                        cfg.Publish(typeof(ShouterMessage), x =>
                         {
                             x.Durable = true;
                             x.ExchangeType = ExchangeType.Fanout;
 
                             x.BindQueue(
-                                BuildQueueName(typeof(ShouterEvent).Namespace, nameof(ShouterEvent)),
-                                shouterRabbitMQConfiguration.QueueName,
+                                BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)),
+                                shouterRabbitMQConfiguration.Queue,
                                 qc =>
                                 {
                                     qc.SetQuorumQueue();
@@ -59,25 +66,21 @@ namespace Rhinero.Shouter.Client
 
             if (shouterKafkaConfiguration is not null)
             {
-                //services.AddMassTransit<IShouterKafkaBus>(x =>
-                //{
-                //    x.SetKebabCaseEndpointNameFormatter();
-                //    x.AddDelayedMessageScheduler();
+                services.AddMassTransit<IShouterKafkaBus>(x =>
+                {
+                    x.SetKebabCaseEndpointNameFormatter();
+                    x.AddDelayedMessageScheduler();
 
-                //    x.AddRider(rider =>
-                //    {
-                //        rider.AddProducer<MyKafkaMessage>("kafka-topic-name");
-                //        rider.UsingKafka((context, k) =>
-                //        {
-                //            k.Host("localhost:9092");
+                    x.AddRider(r =>
+                    {
+                        r.AddProducer<ShouterMessage>(BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
 
-                //            k.TopicEndpoint<MyKafkaMessage>("kafka-topic-name", "group-id", e =>
-                //            {
-                //                e.ConfigureConsumer<MyKafkaConsumer>(context);
-                //            });
-                //        });
-                //    });
-                //}); //TODO: add kafka
+                        r.UsingKafka((context, k) =>
+                        {
+                            k.Host(shouterKafkaConfiguration.BootstrapServers);
+                        });
+                    });
+                });
             }
 
             return services;

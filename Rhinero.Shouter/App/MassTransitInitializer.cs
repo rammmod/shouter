@@ -1,5 +1,8 @@
-﻿using Rhinero.Shouter.Consumers;
-using MassTransit;
+﻿using MassTransit;
+using Rhinero.Shouter.Consumers;
+using Rhinero.Shouter.Contracts;
+using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.IBuses;
 using System.Reflection;
 
 namespace Rhinero.Shouter.App
@@ -10,47 +13,80 @@ namespace Rhinero.Shouter.App
         {
             try
             {
-                var mtConfig = configuration.GetSection(nameof(MassTransitConfiguration)).Get<MassTransitConfiguration>();
+                var rabbitMQConfiguration = configuration.GetSection(nameof(RabbitMQ)).Get<RabbitMQ>();
+                var kafkaConfiguration = configuration.GetSection(nameof(Kafka)).Get<Kafka>();
 
-                var bus = services.AddMassTransit(x =>
+                if (rabbitMQConfiguration is null && kafkaConfiguration is null)
+                    throw new ShouterBusConfigurationException();
+
+                if (rabbitMQConfiguration is not null)
                 {
-                    x.SetKebabCaseEndpointNameFormatter();
-                    x.AddDelayedMessageScheduler();
-
-                    x.AddConsumers(Assembly.GetEntryAssembly());
-
-                    x.UsingRabbitMq((context, cfg) =>
+                    services.AddMassTransit<IShouterRabbitMQBus>(x =>
                     {
-                        cfg.UseMessageRetry(r => r.Immediate(5));
-                        cfg.UseInMemoryOutbox();
+                        x.AddDelayedMessageScheduler();
 
-                        cfg.Host(mtConfig.Hostname, mtConfig.Port ?? 5672, mtConfig.VirtualHost, h =>
+                        x.AddConsumers(Assembly.GetEntryAssembly());
+
+                        x.UsingRabbitMq((context, cfg) =>
                         {
-                            h.Username(mtConfig.UserName);
-                            h.Password(mtConfig.Password);
+                            cfg.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
+                            cfg.UseInMemoryOutbox();
+
+                            cfg.Host(rabbitMQConfiguration.Hostname, rabbitMQConfiguration.Port, rabbitMQConfiguration.VirtualHost, h =>
+                            {
+                                h.Username(rabbitMQConfiguration.UserName);
+                                h.Password(rabbitMQConfiguration.Password);
+                            });
+
+                            cfg.ReceiveEndpoint(rabbitMQConfiguration.Queue, qc =>
+                            {
+                                qc.Durable = true;
+                                qc.AutoStart = true;
+                                qc.PrefetchCount = rabbitMQConfiguration.PrefetchCount;
+                                qc.ConcurrentMessageLimit = rabbitMQConfiguration.ConcurrentMessageLimit;
+
+                                qc.ConfigureConsumer(context, typeof(ShouterRabbitMQConsumer));
+                            });
+
                         });
-
-                        cfg.ReceiveEndpoint(mtConfig.QueueName, qc =>
-                        {
-                            qc.Durable = true;
-                            qc.AutoStart = true;
-                            qc.ConfigureConsumeTopology = false;
-                            qc.PrefetchCount = mtConfig.PrefetchCount ?? 1;
-                            qc.ConcurrentMessageLimit = mtConfig.ConcurrentMessageLimit ?? 1;
-
-                            qc.ConfigureConsumer(context, typeof(ShouterConsumer));
-                        });
-
                     });
-                });
+                }
 
-                return bus;
+                if (kafkaConfiguration is not null)
+                {
+                    services.AddMassTransit<IShouterKafkaBus>(x =>
+                    {
+                        x.SetKebabCaseEndpointNameFormatter();
+                        x.AddDelayedMessageScheduler();
+
+                        x.AddRider(rider =>
+                        {
+                            rider.AddProducer<ShouterMessage>(BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
+                            rider.UsingKafka((context, k) =>
+                            {
+                                k.Host(kafkaConfiguration.BootstrapServers);
+
+                                k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.Topic, kafkaConfiguration.Group, e =>
+                                {
+                                    e.ConfigureConsumer<ShouterKafkaConsumer>(context);
+                                });
+                            });
+                        });
+                    });
+                }
+
+                return services;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 throw new Exception(ex.Message);
             }
+        }
+
+        private static string BuildQueueName(string @namespace, string contractName)
+        {
+            return @namespace + ":" + contractName;
         }
     }
 }

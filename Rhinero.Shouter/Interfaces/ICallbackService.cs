@@ -1,9 +1,9 @@
-﻿using Rhinero.Shouter.Shared.Contracts;
+﻿using Rhinero.Shouter.Contracts;
 
 namespace Rhinero.Shouter.Interfaces
 {
     public interface ICallbackService
     {
-        Task Send(ShouterEvent message);
+        Task SendAsync(ShouterMessage message);
     }
 }

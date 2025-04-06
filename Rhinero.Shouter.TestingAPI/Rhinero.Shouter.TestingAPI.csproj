@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Rhinero.Shouter.Client\Rhinero.Shouter.Client.csproj" />
-    <ProjectReference Include="..\Rhinero.Shouter.Shared\Rhinero.Shouter.Shared.csproj" />
+    <ProjectReference Include="..\Rhinero.Shouter.Contracts\Rhinero.Shouter.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

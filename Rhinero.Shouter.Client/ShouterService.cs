@@ -1,10 +1,11 @@
-﻿using Rhinero.Shouter.Shared.Contracts;
-using Rhinero.Shouter.Shared.Json;
-using MassTransit;
+﻿using MassTransit;
 using MassTransit.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net;
-using Rhinero.Shouter.Client.Buses;
+using Rhinero.Shouter.Contracts;
+using Rhinero.Shouter.Contracts.Enums;
+using Rhinero.Shouter.Shared;
+using Rhinero.Shouter.Shared.Extensions;
+using Rhinero.Shouter.Shared.IBuses;
 
 namespace Rhinero.Shouter.Client
 {
@@ -17,76 +18,67 @@ namespace Rhinero.Shouter.Client
             _provider = provider;
         }
 
-        public async Task<Guid> ShoutAsync(Uri uri, ShouterMethodEnums method, string payload, CancellationToken cancellationToken = default, string contentType = "application/json", string token = null, NetworkCredential credentials = null)
+        public async Task<Guid> ShoutAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default) =>
+            await ShoutMessage(bus, protocol, payload, cancellationToken);
+
+        public Guid Shout(Buses bus, Protocol protocol, object payload) =>
+            ShoutMessage(bus, protocol, payload, CancellationToken.None).GetAwaiter().GetResult();
+
+        private async Task<Guid> ShoutMessage(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default)
         {
-            try
+            ShouterInterfaceChecker.CheckShouterMessageInterface(payload);
+            ShouterInterfaceChecker.CheckProtocolAndMessage(protocol, payload);
+
+            if (cancellationToken == default)
+                cancellationToken = new CancellationTokenSource(Constants.CancellationTokenTimeSpan).Token;
+
+            var message = new ShouterMessage()
             {
-                var message = CreateContract(uri, method, payload, contentType, token, credentials);
-                await Publish(message, cancellationToken);
-                return message.CorrelationId;
-            }
-            catch (OperationCanceledException)
+                Protocol = MapProtocol(protocol),
+                Payload = payload.ToJson()
+            };
+
+            switch (bus)
             {
-                return new Guid();
-            }
-            catch
-            {
-                throw;
-            }
+                case Buses.RabbitMQ:
+                    await PublishToRabbitMQ(message, cancellationToken);
+                    break;
+                case Buses.Kafka:
+                    await ProduceToKafka(message, cancellationToken);
+                    break;
+            };
+
+            return message.CorrelationId;
         }
 
-        public Task<Guid> ShoutAsync(string uri, object payload, string token = null, NetworkCredential credentials = null, CancellationToken cancellationToken = default)
+        private async Task PublishToRabbitMQ(ShouterMessage message, CancellationToken cancellationToken)
         {
-            return ShoutAsync(new Uri(uri), payload, token, credentials);
+            using var scope = _provider.CreateScope();
+
+            var endpoint =
+                scope.ServiceProvider.GetService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
+
+            await endpoint.Value.Publish(message, cancellationToken);
         }
 
-        public Task<Guid> ShoutAsync(Uri uri, object payload, string token = null, NetworkCredential credentials = null, CancellationToken cancellationToken = default)
+        private async Task ProduceToKafka(ShouterMessage message, CancellationToken cancellationToken)
         {
-            return ShoutAsync(uri, ShouterMethodEnums.Post, payload.ToJson(), default, "application/json", token, credentials);
+            using var scope = _provider.CreateScope();
+
+            var endpoint =
+                scope.ServiceProvider.GetService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
+
+            await endpoint.Value.Produce(message, cancellationToken);
         }
 
-        public Guid Shout(Uri uri, ShouterMethodEnums method, string payload, CancellationToken cancellationToken = default, string contentType = "application/json", string token = null, NetworkCredential credentials = null)
+        private static ProtocolEnum MapProtocol(Protocol protocol)
         {
-            try
+            return protocol switch
             {
-                var message = CreateContract(uri, method, payload, contentType, token, credentials);
-                Publish(message, cancellationToken).GetAwaiter().GetResult();
-                return message.CorrelationId;
-            }
-            catch (OperationCanceledException)
-            {
-                return new Guid();
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        private ShouterEvent CreateContract(Uri uri, ShouterMethodEnums method, string payload, string contentType, string token = null, NetworkCredential credentials = null)
-        {
-            return new ShouterEvent()
-            {
-                Uri = uri,
-                Method = method,
-                Payload = payload,
-                ContentType = contentType,
-                Token = token,
-                Credentials = credentials
+                Protocol.HTTP => ProtocolEnum.Http,
+                Protocol.gRPC => ProtocolEnum.Grpc,
+                _ => throw new NotImplementedException()
             };
         }
-
-        private async Task Publish(object message, CancellationToken cancellationToken = default)
-        {
-            using (var scope = _provider.CreateScope())
-            {
-                if (cancellationToken == default)
-                    cancellationToken = new CancellationTokenSource(new TimeSpan(0, 0, 5)).Token;
-
-                var endpoint = scope.ServiceProvider.GetService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
-                await endpoint.Value.Publish(message, cancellationToken);
-            }
-        }
-
     }
 }

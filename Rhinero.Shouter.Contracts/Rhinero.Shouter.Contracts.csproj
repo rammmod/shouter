@@ -3,14 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Rhinero.Shouter" />
     <InternalsVisibleTo Include="Rhinero.Shouter.Client" />
-    <PackageReference Include="MassTransit" Version="8.4.0" />
+    <InternalsVisibleTo Include="Rhinero.Shouter.Shared" />
+    <ProjectReference Include="..\Rhinero.Shouter.Shared\Rhinero.Shouter.Shared.csproj" />
   </ItemGroup>
 
 </Project>

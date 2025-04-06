@@ -1,9 +1,9 @@
 ﻿using Rhinero.Shouter.Shared;
 using System.ComponentModel.DataAnnotations;
 
-namespace Rhinero.Shouter.Client.Configuration
+namespace Rhinero.Shouter.App
 {
-    internal class RabbitMQ
+    public class RabbitMQ
     {
         [Required]
         public string Hostname { get; set; }
@@ -17,5 +17,9 @@ namespace Rhinero.Shouter.Client.Configuration
         public string Password { get; set; }
 
         public string Queue { get; set; } = Constants.DefaultRabbitMQ.Queue;
+
+        public int PrefetchCount { get; set; } = Constants.DefaultRabbitMQ.PrefetchCount;
+
+        public int ConcurrentMessageLimit { get; set; } = Constants.DefaultRabbitMQ.ConcurrentMessageLimit;
     }
 }

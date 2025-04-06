@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference PrivateAssets="all" Include="..\Rhinero.Shouter.Contracts\Rhinero.Shouter.Contracts.csproj" />
     <ProjectReference PrivateAssets="all" Include="..\Rhinero.Shouter.Shared\Rhinero.Shouter.Shared.csproj" />
-    <ProjectReference PrivateAssets="all" Include="..\Rhinero.Utils\Rhinero.Utils.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,13 +5,13 @@ VisualStudioVersion = 17.5.33414.496
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter", "Rhinero.Shouter\Rhinero.Shouter.csproj", "{7BD053A4-A7CF-43A4-B8D1-12C3938723FC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Utils", "Rhinero.Utils\Rhinero.Utils.csproj", "{6BA62A44-B59A-4E65-94C6-0022EF241F99}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter.Shared", "Rhinero.Shouter.Shared\Rhinero.Shouter.Shared.csproj", "{F4368636-42A0-4C94-AD61-E0A13D25D9A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter.Client", "Rhinero.Shouter.Client\Rhinero.Shouter.Client.csproj", "{9713B94E-F3DF-417A-B45A-1DA6171DA497}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter.TestingAPI", "Rhinero.Shouter.TestingAPI\Rhinero.Shouter.TestingAPI.csproj", "{1BCDB3AA-3673-4136-8089-8BEF0BF4C7D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhinero.Shouter.Contracts", "Rhinero.Shouter.Contracts\Rhinero.Shouter.Contracts.csproj", "{01906410-4EB3-4255-A39B-65B33D38A45A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,9 +23,6 @@ Global
 		{7BD053A4-A7CF-43A4-B8D1-12C3938723FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BD053A4-A7CF-43A4-B8D1-12C3938723FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BD053A4-A7CF-43A4-B8D1-12C3938723FC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6BA62A44-B59A-4E65-94C6-0022EF241F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6BA62A44-B59A-4E65-94C6-0022EF241F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6BA62A44-B59A-4E65-94C6-0022EF241F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4368636-42A0-4C94-AD61-E0A13D25D9A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F4368636-42A0-4C94-AD61-E0A13D25D9A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4368636-42A0-4C94-AD61-E0A13D25D9A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -37,6 +34,10 @@ Global
 		{1BCDB3AA-3673-4136-8089-8BEF0BF4C7D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1BCDB3AA-3673-4136-8089-8BEF0BF4C7D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1BCDB3AA-3673-4136-8089-8BEF0BF4C7D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01906410-4EB3-4255-A39B-65B33D38A45A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01906410-4EB3-4255-A39B-65B33D38A45A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01906410-4EB3-4255-A39B-65B33D38A45A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01906410-4EB3-4255-A39B-65B33D38A45A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

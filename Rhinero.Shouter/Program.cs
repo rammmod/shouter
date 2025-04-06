@@ -1,4 +1,5 @@
 ﻿using Rhinero.Shouter.App;
+using Rhinero.Shouter.ExceptionHandler;
 using Rhinero.Utils.Logging;
 
 namespace Rhinero.Shouter
@@ -10,9 +11,7 @@ namespace Rhinero.Shouter
             var builder = WebApplication.CreateBuilder(args);
 
             if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Test"))
-            {
                 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
-            }
 
             var configuration = builder.Configuration
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -20,8 +19,10 @@ namespace Rhinero.Shouter
                 .Build();
 
             builder.AddSerilog(configuration);
-
+            
             builder.Services.AddServices(configuration);
+
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
             var app = builder.Build();
 

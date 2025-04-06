@@ -1,6 +1,8 @@
-using Rhinero.Shouter.Client;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
+using Rhinero.Shouter.Client;
+using Rhinero.Shouter.Contracts.Enums;
+using Rhinero.Shouter.Contracts.Payloads.Grpc;
+using Rhinero.Shouter.Contracts.Payloads.Http;
 
 namespace Rhinero.Shouter.TestingAPI.Controllers
 {
@@ -20,7 +22,19 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
         [HttpPost(Name = "PublishToQueue")]
         public async Task<Guid> PublishToQueue()
         {
-            return await _shouter.ShoutAsync(new Uri("https://www.google.com/"), ShouterMethodEnums.Post, "\\{\"asd\": \"asd\"\\}", credentials: new NetworkCredential());
+            var httpMessage = new HttpPayload()
+            {
+                Uri = new Uri("https://google.com"),
+                Method = ShouterHttpMethod.Get
+            };
+
+            var grpcMessage = new GrpcPayload()
+            {
+
+            };
+
+            await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);
+            return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
         }
     }
 }
