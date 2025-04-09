@@ -10,7 +10,7 @@ namespace Rhinero.Shouter.Shared.Extensions
             WriteIndented = true,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            AllowTrailingCommas = true
+            AllowTrailingCommas = false
         };
 
         public static string ToJson(this object data) =>

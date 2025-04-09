@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using MassTransit.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Enums;
 using Rhinero.Shouter.Shared;
@@ -12,10 +13,14 @@ namespace Rhinero.Shouter.Client
     internal sealed class ShouterService : IShouter
     {
         private readonly IServiceProvider _provider;
+        private readonly ILogger<ShouterService> _logger;
 
-        public ShouterService(IServiceProvider provider)
+        public ShouterService(
+            IServiceProvider provider,
+            ILogger<ShouterService> logger)
         {
             _provider = provider;
+            _logger = logger;
         }
 
         public async Task<Guid> ShoutAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default) =>
@@ -28,6 +33,7 @@ namespace Rhinero.Shouter.Client
         {
             ShouterInterfaceChecker.CheckShouterMessageInterface(payload);
             ShouterInterfaceChecker.CheckProtocolAndMessage(protocol, payload);
+            ShouterInterfaceChecker.CheckForHttpPayload(protocol, payload);
 
             if (cancellationToken == default)
                 cancellationToken = new CancellationTokenSource(Constants.CancellationTokenTimeSpan).Token;
@@ -53,22 +59,38 @@ namespace Rhinero.Shouter.Client
 
         private async Task PublishToRabbitMQ(ShouterMessage message, CancellationToken cancellationToken)
         {
-            using var scope = _provider.CreateScope();
+            try
+            {
+                using var scope = _provider.CreateScope();
 
-            var endpoint =
-                scope.ServiceProvider.GetRequiredService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
+                var endpoint =
+                    scope.ServiceProvider.GetRequiredService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
 
-            await endpoint.Value.Publish(message, cancellationToken);
+                await endpoint.Value.Publish(message, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogPublishError(nameof(ShouterMessage), message, ex);
+                throw;
+            }
         }
 
         private async Task ProduceToKafka(ShouterMessage message, CancellationToken cancellationToken)
         {
-            using var scope = _provider.CreateScope();
+            try
+            {
+                using var scope = _provider.CreateScope();
 
-            var endpoint =
-                scope.ServiceProvider.GetRequiredService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
+                var endpoint =
+                    scope.ServiceProvider.GetRequiredService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
 
-            await endpoint.Value.Produce(message, cancellationToken);
+                await endpoint.Value.Produce(message, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogPublishError(nameof(ShouterMessage), message, ex);
+                throw;
+            }
         }
 
         private static ProtocolEnum MapProtocol(Protocol protocol)

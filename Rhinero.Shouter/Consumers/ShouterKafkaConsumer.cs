@@ -22,16 +22,6 @@ namespace Rhinero.Shouter.Consumers
             var service = _serviceProvider.GetRequiredKeyedService<ICallbackService>(context.Message.Protocol);
 
             await service.SendAsync(context.Message);
-
-            //try
-            //{
-            //    await _callback.Send(context.Message);
-            //}
-            //catch (Exception ex)
-            //{
-            //    _logger.LogConsumeError(nameof(ShouterMessage), context.Message.CorrelationId, ex);
-            //    throw;
-            //} //TODO: change
         }
     }
 }

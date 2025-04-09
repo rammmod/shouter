@@ -24,7 +24,10 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
         {
             var body = new
             {
-                Id = 1
+                Id = 1,
+                Name = "Art",
+                Surname = "Aleksanyan",
+                Age = 29
             };
 
             var httpMessage = new HttpPayload()
@@ -42,7 +45,7 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
                     { "limit", "10" }
                 },
                 Body = JsonSerializer.Serialize(body),
-                ContentType = "application/json",
+                ContentType = ContentTypeEnum.Json,
             };
 
             return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);

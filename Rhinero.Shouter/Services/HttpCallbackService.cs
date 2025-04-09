@@ -40,7 +40,7 @@ namespace Rhinero.Shouter.Services
                 (payload.Method == HttpMethod.Post ||
                  payload.Method == HttpMethod.Put ||
                  payload.Method == HttpMethod.Patch))
-                request.Content = new StringContent(payload.Body, Encoding.UTF8, payload.ContentType ?? "application/json");
+                request.Content = new StringContent(payload.Body, Encoding.UTF8, GetContentType(payload.ContentType));
 
             if (payload.Headers.NotNullOrEmpty())
             {
@@ -62,6 +62,16 @@ namespace Rhinero.Shouter.Services
 
             using var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
+        }
+
+        private static string GetContentType(ContentTypeEnum contentType)
+        {
+            return contentType switch
+            {
+                ContentTypeEnum.Json => "application/json",
+                ContentTypeEnum.Xml => "application/xml",
+                _ => throw new NotImplementedException()
+            };
         }
     }
 }
