@@ -2,5 +2,5 @@
 
 namespace Rhinero.Shouter.Shared.IBuses
 {
-    internal interface IShouterRabbitMQBus : IBus { }
+    public interface IShouterRabbitMQBus : IBus { }
 }

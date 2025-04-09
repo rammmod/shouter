@@ -2,5 +2,5 @@
 
 namespace Rhinero.Shouter.Shared.IBuses
 {
-    internal interface IShouterKafkaBus : IBus { }
+    public interface IShouterKafkaBus : IBus { }
 }

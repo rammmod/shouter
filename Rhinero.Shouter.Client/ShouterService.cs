@@ -56,7 +56,7 @@ namespace Rhinero.Shouter.Client
             using var scope = _provider.CreateScope();
 
             var endpoint =
-                scope.ServiceProvider.GetService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
+                scope.ServiceProvider.GetRequiredService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
 
             await endpoint.Value.Publish(message, cancellationToken);
         }
@@ -66,7 +66,7 @@ namespace Rhinero.Shouter.Client
             using var scope = _provider.CreateScope();
 
             var endpoint =
-                scope.ServiceProvider.GetService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
+                scope.ServiceProvider.GetRequiredService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
 
             await endpoint.Value.Produce(message, cancellationToken);
         }

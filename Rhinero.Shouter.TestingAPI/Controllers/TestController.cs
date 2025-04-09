@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Rhinero.Shouter.Client;
 using Rhinero.Shouter.Contracts.Enums;
-using Rhinero.Shouter.Contracts.Payloads.Grpc;
 using Rhinero.Shouter.Contracts.Payloads.Http;
+using System.Text.Json;
 
 namespace Rhinero.Shouter.TestingAPI.Controllers
 {
@@ -22,19 +22,30 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
         [HttpPost(Name = "PublishToQueue")]
         public async Task<Guid> PublishToQueue()
         {
+            var body = new
+            {
+                Id = 1
+            };
+
             var httpMessage = new HttpPayload()
             {
-                Uri = new Uri("https://google.com"),
-                Method = HttpMethod.Get
+                Uri = new Uri("https://webhook.site/7453b0c3-983e-486c-a854-7f98b9499093"),
+                Method = HttpMethod.Post,
+                Headers = new Dictionary<string, string>()
+                {
+                    {"Accept", "application/json"},
+                    {"User-Agent", "MyApp/1.0" }
+                },
+                QueryParameters = new Dictionary<string, string>()
+                {
+                    { "search", "example"},
+                    { "limit", "10" }
+                },
+                Body = JsonSerializer.Serialize(body),
+                ContentType = "application/json",
             };
 
-            var grpcMessage = new GrpcPayload()
-            {
-
-            };
-
-            await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);
-            return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
+            return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);
         }
     }
 }

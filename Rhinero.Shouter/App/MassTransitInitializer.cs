@@ -40,6 +40,7 @@ namespace Rhinero.Shouter.App
 
                             cfg.ReceiveEndpoint(rabbitMQConfiguration.Queue, qc =>
                             {
+                                qc.SetQueueArgument("x-queue-type", "quorum");
                                 qc.Durable = true;
                                 qc.AutoStart = true;
                                 qc.PrefetchCount = rabbitMQConfiguration.PrefetchCount;
@@ -61,7 +62,7 @@ namespace Rhinero.Shouter.App
 
                         x.AddRider(rider =>
                         {
-                            rider.AddProducer<ShouterMessage>(BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
+                            rider.AddProducer<ShouterMessage>(BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
                             rider.UsingKafka((context, k) =>
                             {
                                 k.Host(kafkaConfiguration.BootstrapServers);
@@ -84,7 +85,7 @@ namespace Rhinero.Shouter.App
             }
         }
 
-        private static string BuildQueueName(string @namespace, string contractName)
+        private static string BuildExchangeName(string @namespace, string contractName)
         {
             return @namespace + ":" + contractName;
         }

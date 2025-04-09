@@ -1,6 +1,6 @@
 ﻿namespace Rhinero.Shouter.Shared
 {
-    internal enum ProtocolEnum
+    public enum ProtocolEnum
     {
         Http,
         Grpc

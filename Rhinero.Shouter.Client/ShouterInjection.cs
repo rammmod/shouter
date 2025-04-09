@@ -3,10 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabbitMQ.Client;
+using Rhinero.Shouter.Client.Configuration;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared.Exceptions;
 using Rhinero.Shouter.Shared.IBuses;
-using ShouterConfiguration = Rhinero.Shouter.Client.Configuration.Shouter;
 
 namespace Rhinero.Shouter.Client
 {
@@ -16,11 +16,12 @@ namespace Rhinero.Shouter.Client
         {
             services.TryAddSingleton<IShouter, ShouterService>();
 
-            var shouterRabbitMQConfiguration =
-                configuration.GetSection(nameof(ShouterConfiguration)).Get<ShouterConfiguration>()?.RabbitMQ;
+            var shouterConfiguration =
+                configuration.GetSection(nameof(ShouterConfiguration)).Get<ShouterConfiguration>();
 
-            var shouterKafkaConfiguration =
-                configuration.GetSection(nameof(ShouterConfiguration)).Get<ShouterConfiguration>()?.Kafka;
+            var shouterRabbitMQConfiguration = shouterConfiguration?.RabbitMQ;
+
+            var shouterKafkaConfiguration = shouterConfiguration?.Kafka;
 
             if (shouterRabbitMQConfiguration is null && shouterKafkaConfiguration is null)
                 throw new ShouterBusConfigurationException();
@@ -48,7 +49,7 @@ namespace Rhinero.Shouter.Client
                             x.ExchangeType = ExchangeType.Fanout;
 
                             x.BindQueue(
-                                BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)),
+                                BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)),
                                 shouterRabbitMQConfiguration.Queue,
                                 qc =>
                                 {
@@ -70,7 +71,7 @@ namespace Rhinero.Shouter.Client
 
                     x.AddRider(r =>
                     {
-                        r.AddProducer<ShouterMessage>(BuildQueueName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
+                        r.AddProducer<ShouterMessage>(BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
 
                         r.UsingKafka((context, k) =>
                         {
@@ -83,7 +84,7 @@ namespace Rhinero.Shouter.Client
             return services;
         }
 
-        private static string BuildQueueName(string @namespace, string contractName)
+        private static string BuildExchangeName(string @namespace, string contractName)
         {
             return @namespace + ":" + contractName;
         }
