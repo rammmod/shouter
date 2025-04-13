@@ -1,15 +1,15 @@
-﻿using MassTransit;
+﻿using Confluent.Kafka;
+using MassTransit;
 using Rhinero.Shouter.Consumers;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared.Exceptions;
 using Rhinero.Shouter.Shared.IBuses;
-using System.Reflection;
 
 namespace Rhinero.Shouter.App
 {
     internal static class MassTransitInitializer
     {
-        internal static IServiceCollection InitializeMassTransit(this IServiceCollection services, IConfiguration configuration)
+        internal static IServiceCollection AddMassTransit(this IServiceCollection services, IConfiguration configuration)
         {
             try
             {
@@ -23,19 +23,19 @@ namespace Rhinero.Shouter.App
                 {
                     services.AddMassTransit<IShouterRabbitMQBus>(x =>
                     {
-                        x.AddDelayedMessageScheduler();
-
-                        x.AddConsumers(Assembly.GetEntryAssembly());
+                        x.AddConsumer<ShouterRabbitMQConsumer>();
 
                         x.UsingRabbitMq((context, cfg) =>
                         {
                             cfg.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
-                            cfg.UseInMemoryOutbox();
 
                             cfg.Host(rabbitMQConfiguration.Hostname, rabbitMQConfiguration.Port, rabbitMQConfiguration.VirtualHost, h =>
                             {
-                                h.Username(rabbitMQConfiguration.UserName);
-                                h.Password(rabbitMQConfiguration.Password);
+                                if (!string.IsNullOrWhiteSpace(rabbitMQConfiguration.UserName))
+                                    h.Username(rabbitMQConfiguration.UserName);
+
+                                if (!string.IsNullOrWhiteSpace(rabbitMQConfiguration.Password))
+                                    h.Password(rabbitMQConfiguration.Password);
                             });
 
                             cfg.ReceiveEndpoint(rabbitMQConfiguration.Queue, qc =>
@@ -46,7 +46,7 @@ namespace Rhinero.Shouter.App
                                 qc.PrefetchCount = rabbitMQConfiguration.PrefetchCount;
                                 qc.ConcurrentMessageLimit = rabbitMQConfiguration.ConcurrentMessageLimit;
 
-                                qc.ConfigureConsumer(context, typeof(ShouterRabbitMQConsumer));
+                                qc.ConfigureConsumer<ShouterRabbitMQConsumer>(context);
                             });
 
                         });
@@ -57,19 +57,41 @@ namespace Rhinero.Shouter.App
                 {
                     services.AddMassTransit<IShouterKafkaBus>(x =>
                     {
-                        x.SetKebabCaseEndpointNameFormatter();
-                        x.AddDelayedMessageScheduler();
+                        x.UsingInMemory();
 
-                        x.AddRider(rider =>
+                        x.AddRider(r =>
                         {
-                            rider.AddProducer<ShouterMessage>(BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
-                            rider.UsingKafka((context, k) =>
+                            r.AddConsumer<ShouterKafkaConsumer>();
+
+                            r.UsingKafka((context, k) =>
                             {
-                                k.Host(kafkaConfiguration.BootstrapServers);
+                                k.Host(kafkaConfiguration.BootstrapServers, h =>
+                                {
+                                    h.UseSasl(s =>
+                                    {
+                                        //s.Username = "your-username"; //TODO: add to config
+                                        //s.Password = "your-password";
+                                        s.Mechanism = SaslMechanism.Plain;
+                                    });
+
+                                    h.UseSsl(s =>
+                                    {
+                                        s.EnableSslCertificateVerification = false; //TODO: add to config
+                                    });
+                                });
 
                                 k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.Topic, kafkaConfiguration.Group, e =>
                                 {
+                                    e.PrefetchCount = 16; //TODO: make configurable
+                                    e.ConcurrentMessageLimit = 16;
+                                    e.ConcurrentDeliveryLimit = 16;
+                                    e.ConcurrentConsumerLimit = 16;
+                                    e.ConfigureConsumeTopology = true;
+                                    e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
+
+                                    e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
                                     e.ConfigureConsumer<ShouterKafkaConsumer>(context);
+                                    //e.Consumer<ShouterKafkaConsumer>(context);
                                 });
                             });
                         });
@@ -81,13 +103,8 @@ namespace Rhinero.Shouter.App
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                throw new Exception(ex.Message);
+                throw;
             }
-        }
-
-        private static string BuildExchangeName(string @namespace, string contractName)
-        {
-            return @namespace + ":" + contractName;
         }
     }
 }

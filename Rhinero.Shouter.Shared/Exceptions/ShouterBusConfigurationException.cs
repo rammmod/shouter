@@ -2,8 +2,6 @@
 {
     public sealed class ShouterBusConfigurationException : Exception
     {
-        public ShouterBusConfigurationException() : base("One of bus configurations should be set")
-        {
-        }
+        public ShouterBusConfigurationException() : base("One of bus configurations should be set") { }
     }
 }

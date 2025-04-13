@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Enums;
 using Rhinero.Shouter.Shared;
+using Rhinero.Shouter.Shared.Exceptions;
 using Rhinero.Shouter.Shared.Extensions;
 using Rhinero.Shouter.Shared.IBuses;
 
@@ -63,15 +64,15 @@ namespace Rhinero.Shouter.Client
             {
                 using var scope = _provider.CreateScope();
 
-                var endpoint =
+                var publishEndpoint =
                     scope.ServiceProvider.GetRequiredService<Bind<IShouterRabbitMQBus, IPublishEndpoint>>();
 
-                await endpoint.Value.Publish(message, cancellationToken);
+                await publishEndpoint.Value.Publish(message, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogPublishError(nameof(ShouterMessage), message, ex);
-                throw;
+                throw new RabbitMQPublishException();
             }
         }
 
@@ -81,15 +82,15 @@ namespace Rhinero.Shouter.Client
             {
                 using var scope = _provider.CreateScope();
 
-                var endpoint =
-                    scope.ServiceProvider.GetRequiredService<Bind<IShouterKafkaBus, ITopicProducer<ShouterMessage>>>();
+                var topicProducer =
+                    scope.ServiceProvider.GetRequiredService<ITopicProducer<ShouterMessage>>();
 
-                await endpoint.Value.Produce(message, cancellationToken);
+                await topicProducer.Produce(message, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogPublishError(nameof(ShouterMessage), message, ex);
-                throw;
+                throw new KafkaProduceException();
             }
         }
 

@@ -19,6 +19,8 @@ namespace Rhinero.Shouter.Consumers
 
         public async Task Consume(ConsumeContext<ShouterMessage> context)
         {
+            _logger.LogInformation("Processing Kafka message: {@message}", context.Message);
+
             var service = _serviceProvider.GetRequiredKeyedService<ICallbackService>(context.Message.Protocol);
 
             await service.SendAsync(context.Message);

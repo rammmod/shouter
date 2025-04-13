@@ -21,5 +21,8 @@ namespace Rhinero.Shouter.Shared.Extensions
 
         public static object FromJson(this string data, Type type) =>
             JsonSerializer.Deserialize(data, type, defaultSerializerSettings);
+
+        public static object FromJson(this string data) =>
+            JsonSerializer.Deserialize(data, typeof(object), defaultSerializerSettings);
     }
 }

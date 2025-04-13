@@ -2,8 +2,6 @@
 {
     public sealed class ShouterInterfaceImplementationException : Exception
     {
-        public ShouterInterfaceImplementationException() : base("Payload should implement IShouterPayload interface")
-        {
-        }
+        public ShouterInterfaceImplementationException() : base("Payload should implement IShouterPayload interface") { }
     }
 }

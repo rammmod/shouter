@@ -4,6 +4,7 @@
     {
         internal static class DefaultRabbitMQ
         {
+            internal const string Exchange = "ShouterExchange";
             internal const string Queue = "ShouterQueue";
             internal const string VirtualHost = "/";
             internal const int Port = 5672;
@@ -14,8 +15,7 @@
         internal static class DefaultKafka
         {
             internal const string Topic = "ShouterTopic";
-            internal const string Group = "ShouterTopic";
-            internal const string DefaultTopicName = "ShouterTopic";
+            internal const string Group = "ShouterGroup";
         }
 
         internal static class StringCharacters

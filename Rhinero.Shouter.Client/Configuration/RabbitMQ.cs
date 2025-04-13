@@ -16,6 +16,8 @@ namespace Rhinero.Shouter.Client.Configuration
 
         public string Password { get; set; }
 
+        public string Exchange { get; set; } = Constants.DefaultRabbitMQ.Exchange;
+
         public string Queue { get; set; } = Constants.DefaultRabbitMQ.Queue;
     }
 }

@@ -1,5 +1,4 @@
-﻿using Rhinero.Shouter.Contracts;
-using Rhinero.Shouter.Contracts.Enums;
+﻿using Rhinero.Shouter.Contracts.Enums;
 
 namespace Rhinero.Shouter.Client
 {

@@ -1,4 +1,5 @@
-﻿using MassTransit;
+﻿using Confluent.Kafka;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -49,7 +50,7 @@ namespace Rhinero.Shouter.Client
                             x.ExchangeType = ExchangeType.Fanout;
 
                             x.BindQueue(
-                                BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)),
+                                shouterRabbitMQConfiguration.Exchange,
                                 shouterRabbitMQConfiguration.Queue,
                                 qc =>
                                 {
@@ -66,27 +67,36 @@ namespace Rhinero.Shouter.Client
             {
                 services.AddMassTransit<IShouterKafkaBus>(x =>
                 {
-                    x.SetKebabCaseEndpointNameFormatter();
+                    x.UsingInMemory();
+
                     x.AddDelayedMessageScheduler();
 
                     x.AddRider(r =>
                     {
-                        r.AddProducer<ShouterMessage>(BuildExchangeName(typeof(ShouterMessage).Namespace, nameof(ShouterMessage)));
+                        r.AddProducer<ShouterMessage>(shouterKafkaConfiguration.Topic);
 
                         r.UsingKafka((context, k) =>
                         {
-                            k.Host(shouterKafkaConfiguration.BootstrapServers);
+                            k.Host(shouterKafkaConfiguration.BootstrapServers, h =>
+                            {
+                                h.UseSasl(s =>
+                                {
+                                    //s.Username = "your-username"; //TODO: add to config
+                                    //s.Password = "your-password";
+                                    s.Mechanism = SaslMechanism.Plain;
+                                });
+
+                                h.UseSsl(s =>
+                                {
+                                    s.EnableSslCertificateVerification = false; //TODO: add to config
+                                });
+                            });
                         });
                     });
                 });
             }
 
             return services;
-        }
-
-        private static string BuildExchangeName(string @namespace, string contractName)
-        {
-            return @namespace + ":" + contractName;
         }
     }
 }

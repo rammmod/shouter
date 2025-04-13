@@ -2,8 +2,6 @@
 {
     public sealed class ProtocolAndMessageTypeInconsistencyException : Exception
     {
-        public ProtocolAndMessageTypeInconsistencyException() : base("Protocol and message type are inconsistent")
-        {
-        }
+        public ProtocolAndMessageTypeInconsistencyException() : base("Protocol and message type are inconsistent") { }
     }
 }

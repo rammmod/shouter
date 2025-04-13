@@ -2,6 +2,14 @@
 {
     public class GrpcPayload : IShouterPayload
     {
-        //TODO: add missing parameters
+        private string _fileName;
+
+        public Uri Uri { get; init; }
+        public string FileName
+        {
+            get => _fileName.EndsWith(".proto", StringComparison.InvariantCulture) ? _fileName : string.Concat(_fileName, ".proto");
+            init => _fileName = value;
+        }
+        public string Request { get; init; }
     }
 }

@@ -18,7 +18,7 @@ namespace Rhinero.Shouter
                 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
                 .Build();
 
-            builder.AddSerilog(configuration);
+            builder.AddSerilog();
             
             builder.Services.AddServices(configuration);
 

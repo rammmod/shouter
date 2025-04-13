@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Rhinero.Shouter.Client;
 using Rhinero.Shouter.Contracts.Enums;
+using Rhinero.Shouter.Contracts.Payloads.Grpc;
 using Rhinero.Shouter.Contracts.Payloads.Http;
 using System.Text.Json;
 
@@ -19,8 +20,8 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             _shouter = shouter;
         }
 
-        [HttpPost(Name = "PublishToQueue")]
-        public async Task<Guid> PublishToQueue()
+        [HttpPost(nameof(HttpMessage))]
+        public async Task<Guid> HttpMessage()
         {
             var body = new
             {
@@ -45,10 +46,23 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
                     { "limit", "10" }
                 },
                 Body = JsonSerializer.Serialize(body),
-                ContentType = ContentTypeEnum.Json,
+                ContentType = ContentTypeEnum.Json
             };
 
-            return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);
+            return await _shouter.ShoutAsync(Buses.Kafka, Protocol.HTTP, httpMessage, HttpContext.RequestAborted);
+        }
+
+        [HttpPost(nameof(GrpcMessage))]
+        public async Task<Guid> GrpcMessage()
+        {
+            var grpcMessage = new GrpcPayload()
+            {
+                Uri = new Uri("http://localhost:5215"),
+                FileName = "hello.proto",
+                Request = "Hello"
+            };
+
+            return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
         }
     }
 }
