@@ -26,12 +26,39 @@
             internal const string Colon = ":";
         }
 
-
         internal static class Http
         {
             internal const string BasicAuthentication = "Basic";
             internal const string BearerAuthentication = "Bearer";
             internal static string ContentType = "Content-Type";
+        }
+
+        internal static class Directories
+        {
+            internal const string ProtoFiles = "ProtoFiles";
+            internal const string ProtoFilesGenerated = $"{ProtoFiles}\\Generated";
+        }
+
+        internal static class FileExtensions
+        {
+            internal const string WildcardCs = "*.cs";
+            internal const string Cs = ".cs";
+
+            internal const string WildcardProto = "*.proto";
+            internal const string Proto = ".proto";
+
+            internal const string GrpcName = "Grpc";
+        }
+
+        internal static class FileContentTypes
+        {
+            internal const string TextPlainContentType = "text/plain";
+            internal const string OctetStreamContentType = "application/octet-stream";
+        }
+
+        internal static class Assembly
+        {
+            internal const string DynamicGrpcAssembly = "DynamicGrpcAssembly";
         }
 
         internal static TimeSpan CancellationTokenTimeSpan = new TimeSpan(0, 0, 5);

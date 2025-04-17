@@ -9,8 +9,7 @@ namespace Rhinero.Shouter.ExceptionHandler
             Exception exception,
             CancellationToken cancellationToken)
         {
-            _logger.LogError("General exception occurred: {@generalException}",
-                string.Concat(exception?.Message, exception?.InnerException?.Message));
+            _logger.LogError("General exception occurred: {@exception}", exception);
 
             return await Task.FromResult(true);
         }

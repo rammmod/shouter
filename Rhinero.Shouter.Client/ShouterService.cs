@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Enums;
 using Rhinero.Shouter.Shared;
-using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.Extensions;
 using Rhinero.Shouter.Shared.IBuses;
 

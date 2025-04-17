@@ -1,5 +1,5 @@
+using Dynamic.Grpc;
 using Grpc.Core;
-using TestGrpcService;
 
 namespace TestGrpcService.Services
 {

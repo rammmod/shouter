@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using RabbitMQ.Client;
 using Rhinero.Shouter.Client.Configuration;
 using Rhinero.Shouter.Contracts;
-using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 
 namespace Rhinero.Shouter.Client

@@ -2,7 +2,7 @@
 using Rhinero.Shouter.Contracts.Payloads;
 using Rhinero.Shouter.Contracts.Payloads.Grpc;
 using Rhinero.Shouter.Contracts.Payloads.Http;
-using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using System.Text.Json;
 using System.Xml;
 

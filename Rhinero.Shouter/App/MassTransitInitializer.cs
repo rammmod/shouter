@@ -2,7 +2,7 @@
 using MassTransit;
 using Rhinero.Shouter.Consumers;
 using Rhinero.Shouter.Contracts;
-using Rhinero.Shouter.Shared.Exceptions;
+using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 
 namespace Rhinero.Shouter.App

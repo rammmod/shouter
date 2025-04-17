@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter.TestingAPI"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rhinero.Shouter.Contracts", "Rhinero.Shouter.Contracts\Rhinero.Shouter.Contracts.csproj", "{01906410-4EB3-4255-A39B-65B33D38A45A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestGrpcService", "TestGrpcService\TestGrpcService.csproj", "{8CF4ED50-6C10-467D-AF08-1566B42ABAE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGrpcService", "TestGrpcService\TestGrpcService.csproj", "{8CF4ED50-6C10-467D-AF08-1566B42ABAE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp2", "ConsoleApp2\ConsoleApp2.csproj", "{E02DD172-83DB-45E4-BF30-239C90D57684}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{8CF4ED50-6C10-467D-AF08-1566B42ABAE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CF4ED50-6C10-467D-AF08-1566B42ABAE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CF4ED50-6C10-467D-AF08-1566B42ABAE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E02DD172-83DB-45E4-BF30-239C90D57684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E02DD172-83DB-45E4-BF30-239C90D57684}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E02DD172-83DB-45E4-BF30-239C90D57684}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E02DD172-83DB-45E4-BF30-239C90D57684}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
