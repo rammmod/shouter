@@ -3,13 +3,18 @@ syntax = "proto3";
 option csharp_namespace = "Dynamic.Grpc";
 
 service Greeter {
-  rpc SayHello (HelloRequest1) returns (HelloReply1);
+  rpc SayHello (HelloRequest) returns (HelloReply);
 }
 
-message HelloRequest1 {
+message HelloRequest {
   string name = 1;
 }
 
-message HelloReply1 {
+message HelloReply {
   string message = 1;
+  ComplexMessage uuu = 2;
+}
+
+message ComplexMessage {
+	string hello = 1;
 }

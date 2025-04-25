@@ -12,4 +12,9 @@ message HelloRequest {
 
 message HelloReply {
   string message = 1;
+  ComplexMessage uuu = 2;
+}
+
+message ComplexMessage {
+	string hello = 1;
 }

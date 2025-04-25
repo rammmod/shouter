@@ -61,10 +61,10 @@ namespace Rhinero.Shouter.Services.Protos
             if (file.IsNullOrEmpty())
                 throw new FileNotUploadedException();
 
-            if (Path.GetExtension(file.FileName).ToLowerInvariant() is not Constants.FileExtensions.Proto)
+            if (!Path.GetExtension(file.FileName).Equals(Constants.FileExtensions.Proto, StringComparison.InvariantCultureIgnoreCase))
                 throw new FileExtensionException(Constants.FileExtensions.Proto);
 
-            if (file.FileName.ToLowerInvariant().Remove(file.FileName.Length - Constants.FileExtensions.Proto.Length).Contains(Constants.FileExtensions.Proto))
+            if (file.FileName.Remove(file.FileName.Length - Constants.FileExtensions.Proto.Length).Contains(Constants.FileExtensions.Proto, StringComparison.InvariantCultureIgnoreCase))
                 throw new FileNameCanNotContainException(Constants.FileExtensions.Proto);
 
             if (!_allowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))

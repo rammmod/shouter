@@ -58,8 +58,18 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             var grpcMessage = new GrpcPayload()
             {
                 Uri = new Uri("http://localhost:5215"),
-                FileName = "hello.proto",
-                Request = "Hello"
+                Service = new GrpcService()
+                {
+                    FileName = "AAA",
+                    ClientName = null
+                },
+                RequestArgumentName = "HelloRequest",
+                RequestMethod = "SayHelloAsync",
+                RequestParameters = new Dictionary<string, string>()
+                {
+                    {"Name", "AAA"},
+                },
+                ResponseArgumentName = "HelloReply",
             };
 
             return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);

@@ -4,6 +4,6 @@ namespace Rhinero.Shouter.Interfaces
 {
     public interface ICallbackService
     {
-        Task SendAsync(ShouterMessage message);
+        Task SendAsync(ShouterMessage message, CancellationToken cancellationToken);
     }
 }

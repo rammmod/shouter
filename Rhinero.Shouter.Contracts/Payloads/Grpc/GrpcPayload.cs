@@ -1,15 +1,35 @@
-﻿namespace Rhinero.Shouter.Contracts.Payloads.Grpc
+﻿using Rhinero.Shouter.Shared;
+using Rhinero.Shouter.Shared.Exceptions.File;
+
+namespace Rhinero.Shouter.Contracts.Payloads.Grpc
 {
-    public class GrpcPayload : IShouterPayload
+    public sealed class GrpcPayload : IShouterPayload
+    {
+        public Uri Uri { get; init; }
+        public GrpcService Service { get; set; }
+        public string RequestMethod { get; init; }
+        public string RequestArgumentName { get; init; }
+        public Dictionary<string, string> RequestParameters { get; init; }
+        public Dictionary<string, string> RequestMetadata { get; init; }
+        public int? RequestDeadlineInSeconds { get; init; }
+
+        public string ResponseArgumentName { get; init; }
+    }
+
+    public sealed class GrpcService
     {
         private string _fileName;
-
-        public Uri Uri { get; init; }
         public string FileName
         {
-            get => _fileName.EndsWith(".proto", StringComparison.InvariantCulture) ? _fileName : string.Concat(_fileName, ".proto");
-            init => _fileName = value;
+            get => _fileName;
+            init
+            {
+                if (value.Contains(Constants.FileExtensions.Proto, StringComparison.InvariantCultureIgnoreCase))
+                    throw new FileNameCanNotContainException(Constants.FileExtensions.Proto);
+
+                _fileName = value;
+            }
         }
-        public string Request { get; init; }
+        public string ClientName { get; init; }
     }
 }

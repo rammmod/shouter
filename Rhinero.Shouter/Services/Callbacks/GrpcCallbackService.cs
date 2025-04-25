@@ -1,33 +1,67 @@
-﻿using Grpc.Net.Client;
-using Rhinero.Shouter.App;
+﻿using Google.Protobuf;
+using Grpc.Net.Client;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Payloads.Grpc;
+using Rhinero.Shouter.Helpers;
 using Rhinero.Shouter.Interfaces;
 using Rhinero.Shouter.Shared.Extensions;
+using System.Dynamic;
 
 namespace Rhinero.Shouter.Services.Callbacks
 {
     public class GrpcCallbackService : ICallbackService
     {
-        public GrpcCallbackService()
+        private readonly IProtoCache _protoCache;
+        private readonly ILogger<GrpcCallbackService> _logger;
+
+        public GrpcCallbackService(
+            IProtoCache protoCache,
+            ILogger<GrpcCallbackService> logger)
         {
+            _protoCache = protoCache;
+            _logger = logger;
         }
 
-        public async Task SendAsync(ShouterMessage message)
+        public async Task SendAsync(ShouterMessage message, CancellationToken cancellationToken)
         {
-            //var payload = message.Payload.FromJson<GrpcPayload>();
+            var payload = message.Payload.FromJson<GrpcPayload>();
 
-            //using var channel = GrpcChannel.ForAddress(payload.Uri.AbsoluteUri);
+            var (clientType, requestType, replyType) = GrpcHelper.GetMessageTypes(_protoCache, payload);
 
-            //var client = new Greeter.GreeterClient(channel);
+            using var channel = GrpcChannel.ForAddress(payload.Uri);
 
-            //var reply = await client.SayHelloAsync(
-            //    new HelloRequest()
-            //    {
-            //        Name = payload.Request
-            //    });
+            var clientConstructor = clientType.GetConstructor([typeof(Grpc.Core.CallInvoker)]);
+            var client = clientConstructor.Invoke([channel.CreateCallInvoker()]);
 
-            //Console.WriteLine(reply.Message);
+            var request = Activator.CreateInstance(requestType);
+            GrpcHelper.EnrichWithRequestValues(request, payload.RequestParameters);
+
+            var requestMethod = GrpcHelper.GetRequestMethod(clientType, requestType, payload);
+
+            var metadata = GrpcHelper.GetMetadata(payload);
+
+            DateTime? deadline = payload.RequestDeadlineInSeconds is null ?
+                null :
+                DateTime.UtcNow.AddSeconds((double)payload.RequestDeadlineInSeconds);
+
+            var result = requestMethod.Invoke(client, [request, metadata, deadline, cancellationToken]);
+
+            if (result?.GetType() is null)
+            {
+                _logger.LogInformation($"Method returned null. Method: {requestMethod.Name}, CorrelationId: {message.CorrelationId}");
+                return;
+            }
+
+            var response = await GrpcHelper.GetResponseFromInvokationAsync(result);
+
+            if (response is null)
+            {
+                _logger.LogInformation($"No response received. CorrelationId: {message.CorrelationId}");
+                return;
+            }
+
+            string json = JsonFormatter.Default.Format(response as IMessage);
+            dynamic dynamicObject = json.FromJson<ExpandoObject>();
         }
     }
 }

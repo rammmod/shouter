@@ -15,7 +15,11 @@ namespace TestGrpcService.Services
         {
             return Task.FromResult(new HelloReply
             {
-                Message = "Hello " + request.Name
+                Message = "Hello " + request.Name,
+                Uuu = new ComplexMessage()
+                {
+                    Hello = "asd"
+                }
             });
         }
     }

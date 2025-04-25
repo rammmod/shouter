@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Rhinero.Shouter.App;
 using Rhinero.Shouter.Interfaces;
@@ -13,17 +14,13 @@ namespace Rhinero.Shouter.Services.Protos
 {
     public class ProtoCache : IProtoCache
     {
-        private readonly ILogger<ProtoCache> _logger;
         private readonly Protoc _protoc;
         private readonly ICollection<MetadataReference> _metadataReferences;
 
         private readonly Dictionary<string, Assembly> _cache = [];
 
-        public ProtoCache(
-            ILogger<ProtoCache> logger,
-            Protoc protoc)
+        public ProtoCache(Protoc protoc)
         {
-            _logger = logger;
             _protoc = protoc;
             _metadataReferences = LoadAssembliesMetadata();
 
@@ -46,6 +43,28 @@ namespace Rhinero.Shouter.Services.Protos
                 _cache.Add(item, GenerateAssembly(item, _metadataReferences));
         }
 
+        #region Cache region
+
+        public Assembly GetAssemblyByKey(string key)
+        {
+            if (_cache.TryGetValue(key, out var assembly))
+                return assembly;
+
+            throw new GrpcAssemblyNotFoundException(key);
+        }
+
+        public Assembly GetAssemblyByClient(string clientName)
+        {
+            return _cache.Values.Where(a => a.GetTypes().FirstOrDefault(t =>
+                    t.Name.Equals(clientName + Constants.Assembly.Client) is true &&
+                    t.BaseType?.Name.Equals(clientName + Constants.Assembly.ClientBase) is true) is not null).FirstOrDefault() ??
+            throw new GrpcAssemblyNotFoundException(clientName);
+        }
+
+        #endregion
+
+        #region Api region
+
         public async Task<KeyValuePair<string, string>> GetAsync(string key, CancellationToken cancellationToken)
         {
             if (!_cache.ContainsKey(key))
@@ -65,16 +84,24 @@ namespace Rhinero.Shouter.Services.Protos
         {
             var protoFilePath = Path.Combine(Constants.Directories.ProtoFiles, fileName);
 
-            if (File.Exists(protoFilePath))
-                throw new FileExistsException(fileName);
+            try
+            {
+                if (File.Exists(protoFilePath))
+                    throw new FileExistsException(fileName);
 
-            await File.WriteAllTextAsync(protoFilePath, content, cancellationToken);
+                await File.WriteAllTextAsync(protoFilePath, content, cancellationToken);
 
-            RunProtoc(protoFilePath, FindGrpcCSharpPlugin());
+                RunProtoc(protoFilePath, FindGrpcCSharpPlugin());
 
-            var protoFileName = fileName.Replace(Constants.FileExtensions.Proto, string.Empty);
+                var protoFileName = fileName.Replace(Constants.FileExtensions.Proto, string.Empty);
 
-            _cache.Add(protoFileName, GenerateAssembly(protoFileName, _metadataReferences));
+                _cache.Add(protoFileName, GenerateAssembly(protoFileName, _metadataReferences));
+            }
+            catch
+            {
+                File.Delete(protoFilePath);
+                throw;
+            }
         }
 
         public async Task UpdateAsync(string fileName, string content, CancellationToken cancellationToken)
@@ -84,14 +111,27 @@ namespace Rhinero.Shouter.Services.Protos
             if (!File.Exists(protoFilePath))
                 throw new FileNotExistException(fileName);
 
-            await File.WriteAllTextAsync(protoFilePath, content, cancellationToken);
+            var originalContent = await File.ReadAllTextAsync(protoFilePath, cancellationToken);
 
-            RunProtoc(protoFilePath, FindGrpcCSharpPlugin());
+            try
+            {
+                if (content.Equals(originalContent, StringComparison.Ordinal))
+                    return;
 
-            var protoFileName = fileName.Replace(Constants.FileExtensions.Proto, string.Empty);
-            
-            _cache.Remove(protoFileName);
-            _cache.Add(protoFileName, GenerateAssembly(protoFileName, _metadataReferences));
+                await File.WriteAllTextAsync(protoFilePath, content, cancellationToken);
+
+                RunProtoc(protoFilePath, FindGrpcCSharpPlugin());
+
+                var protoFileName = fileName.Replace(Constants.FileExtensions.Proto, string.Empty);
+
+                _cache.Remove(protoFileName);
+                _cache.Add(protoFileName, GenerateAssembly(protoFileName, _metadataReferences));
+            }
+            catch
+            {
+                await File.WriteAllTextAsync(protoFilePath, originalContent, cancellationToken);
+                throw;
+            }
         }
 
         public void DeleteAsync(string fileName)
@@ -115,6 +155,8 @@ namespace Rhinero.Shouter.Services.Protos
 
             _cache.Remove(fileName);
         }
+
+        #endregion
 
         #region helpers
 

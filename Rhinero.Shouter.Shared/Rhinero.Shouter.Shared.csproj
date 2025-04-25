@@ -10,6 +10,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Rhinero.Shouter" />
     <InternalsVisibleTo Include="Rhinero.Shouter.Client" />
+    <InternalsVisibleTo Include="Rhinero.Shouter.Contracts" />
     <PackageReference Include="MassTransit" Version="8.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
   </ItemGroup>

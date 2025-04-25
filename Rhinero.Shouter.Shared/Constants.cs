@@ -24,6 +24,7 @@
             internal const string EqualsSign = "=";
             internal const string QuestionMark = "?";
             internal const string Colon = ":";
+            internal const string Dot = ".";
         }
 
         internal static class Http
@@ -59,6 +60,14 @@
         internal static class Assembly
         {
             internal const string DynamicGrpcAssembly = "DynamicGrpcAssembly";
+            internal const string Client = "Client";
+            internal const string ClientBase = "ClientBase";
+        }
+
+        internal static class Task
+        {
+            internal const string Result = "Result";
+            internal const string ResponseAsync = "ResponseAsync";
         }
 
         internal static TimeSpan CancellationTokenTimeSpan = new TimeSpan(0, 0, 5);

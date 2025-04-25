@@ -42,15 +42,15 @@ namespace Dynamic.Grpc {
       return parser.ParseFrom(context.PayloadAsNewBuffer());
     }
 
-    static readonly grpc::Marshaller<global::Dynamic.Grpc.HelloRequest1> __Marshaller_HelloRequest1 = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Dynamic.Grpc.HelloRequest1.Parser));
-    static readonly grpc::Marshaller<global::Dynamic.Grpc.HelloReply1> __Marshaller_HelloReply1 = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Dynamic.Grpc.HelloReply1.Parser));
+    static readonly grpc::Marshaller<global::Dynamic.Grpc.HelloRequest> __Marshaller_HelloRequest = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Dynamic.Grpc.HelloRequest.Parser));
+    static readonly grpc::Marshaller<global::Dynamic.Grpc.HelloReply> __Marshaller_HelloReply = grpc::Marshallers.Create(__Helper_SerializeMessage, context => __Helper_DeserializeMessage(context, global::Dynamic.Grpc.HelloReply.Parser));
 
-    static readonly grpc::Method<global::Dynamic.Grpc.HelloRequest1, global::Dynamic.Grpc.HelloReply1> __Method_SayHello = new grpc::Method<global::Dynamic.Grpc.HelloRequest1, global::Dynamic.Grpc.HelloReply1>(
+    static readonly grpc::Method<global::Dynamic.Grpc.HelloRequest, global::Dynamic.Grpc.HelloReply> __Method_SayHello = new grpc::Method<global::Dynamic.Grpc.HelloRequest, global::Dynamic.Grpc.HelloReply>(
         grpc::MethodType.Unary,
         __ServiceName,
         "SayHello",
-        __Marshaller_HelloRequest1,
-        __Marshaller_HelloReply1);
+        __Marshaller_HelloRequest,
+        __Marshaller_HelloReply);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -62,7 +62,7 @@ namespace Dynamic.Grpc {
     [grpc::BindServiceMethod(typeof(Greeter), "BindService")]
     public abstract partial class GreeterBase
     {
-      public virtual global::System.Threading.Tasks.Task<global::Dynamic.Grpc.HelloReply1> SayHello(global::Dynamic.Grpc.HelloRequest1 request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Dynamic.Grpc.HelloReply> SayHello(global::Dynamic.Grpc.HelloRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -92,19 +92,19 @@ namespace Dynamic.Grpc {
       {
       }
 
-      public virtual global::Dynamic.Grpc.HelloReply1 SayHello(global::Dynamic.Grpc.HelloRequest1 request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Dynamic.Grpc.HelloReply SayHello(global::Dynamic.Grpc.HelloRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return SayHello(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
-      public virtual global::Dynamic.Grpc.HelloReply1 SayHello(global::Dynamic.Grpc.HelloRequest1 request, grpc::CallOptions options)
+      public virtual global::Dynamic.Grpc.HelloReply SayHello(global::Dynamic.Grpc.HelloRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_SayHello, null, options, request);
       }
-      public virtual grpc::AsyncUnaryCall<global::Dynamic.Grpc.HelloReply1> SayHelloAsync(global::Dynamic.Grpc.HelloRequest1 request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Dynamic.Grpc.HelloReply> SayHelloAsync(global::Dynamic.Grpc.HelloRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return SayHelloAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
-      public virtual grpc::AsyncUnaryCall<global::Dynamic.Grpc.HelloReply1> SayHelloAsync(global::Dynamic.Grpc.HelloRequest1 request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Dynamic.Grpc.HelloReply> SayHelloAsync(global::Dynamic.Grpc.HelloRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_SayHello, null, options, request);
       }
@@ -129,7 +129,7 @@ namespace Dynamic.Grpc {
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
     public static void BindService(grpc::ServiceBinderBase serviceBinder, GreeterBase serviceImpl)
     {
-      serviceBinder.AddMethod(__Method_SayHello, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Dynamic.Grpc.HelloRequest1, global::Dynamic.Grpc.HelloReply1>(serviceImpl.SayHello));
+      serviceBinder.AddMethod(__Method_SayHello, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Dynamic.Grpc.HelloRequest, global::Dynamic.Grpc.HelloReply>(serviceImpl.SayHello));
     }
 
   }

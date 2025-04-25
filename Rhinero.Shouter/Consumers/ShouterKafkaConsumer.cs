@@ -23,7 +23,7 @@ namespace Rhinero.Shouter.Consumers
 
             var service = _serviceProvider.GetRequiredKeyedService<ICallbackService>(context.Message.Protocol);
 
-            await service.SendAsync(context.Message);
+            await service.SendAsync(context.Message, context.CancellationToken);
         }
     }
 }

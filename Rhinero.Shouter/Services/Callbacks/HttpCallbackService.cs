@@ -1,5 +1,6 @@
 ﻿using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Payloads.Http;
+using Rhinero.Shouter.Helpers;
 using Rhinero.Shouter.Interfaces;
 using Rhinero.Shouter.Shared;
 using Rhinero.Shouter.Shared.Extensions;
@@ -18,17 +19,12 @@ namespace Rhinero.Shouter.Services.Callbacks
             _httpClient = httpClientFactory.CreateClient();
         }
 
-        public async Task SendAsync(ShouterMessage message)
+        public async Task SendAsync(ShouterMessage message, CancellationToken cancellationToken)
         {
             var payload = message.Payload.FromJson<HttpPayload>();
             var uriBuilder = new StringBuilder(payload.Uri.AbsoluteUri);
 
-            if (payload.QueryParameters.NotNullOrEmpty())
-            {
-                uriBuilder.Append(Constants.StringCharacters.QuestionMark);
-                uriBuilder.Append(string.Join(Constants.StringCharacters.Ampersand, payload.QueryParameters.Select(q =>
-                    string.Concat(Uri.EscapeDataString(q.Key), Constants.StringCharacters.EqualsSign, Uri.EscapeDataString(q.Value)))));
-            }
+            HttpHelper.EnrichWithQueryParameters(uriBuilder, payload);
 
             var request = new HttpRequestMessage
             {
@@ -36,42 +32,16 @@ namespace Rhinero.Shouter.Services.Callbacks
                 RequestUri = new Uri(uriBuilder.ToString())
             };
 
-            if (!string.IsNullOrWhiteSpace(payload.Body) &&
-                (payload.Method == HttpMethod.Post ||
-                 payload.Method == HttpMethod.Put ||
-                 payload.Method == HttpMethod.Patch))
-                request.Content = new StringContent(payload.Body, Encoding.UTF8, GetContentType(payload.ContentType));
+            HttpHelper.EnrichWithContent(request, payload);
 
-            if (payload.Headers.NotNullOrEmpty())
-            {
-                foreach (var header in payload.Headers)
-                {
-                    request.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                }
-            }
+            HttpHelper.EnrichWithHeaders(request, payload);
 
-            if (payload.Credentials is not null)
-                request.Headers.Authorization =
-                    new AuthenticationHeaderValue(Constants.Http.BasicAuthentication,
-                    Convert.ToBase64String(Encoding.ASCII.GetBytes(
-                        string.Concat(payload.Credentials.UserName, Constants.StringCharacters.Colon, payload.Credentials.Password))));
+            HttpHelper.EnrichWithCredentials(request, payload);
 
-            if (!string.IsNullOrWhiteSpace(payload.Token) && request.Headers.Authorization is null)
-                request.Headers.Authorization =
-                    new AuthenticationHeaderValue(Constants.Http.BearerAuthentication, payload.Token);
+            HttpHelper.EnrichWithToken(request, payload);
 
-            using var response = await _httpClient.SendAsync(request);
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
             response.EnsureSuccessStatusCode();
-        }
-
-        private static string GetContentType(ContentTypeEnum contentType)
-        {
-            return contentType switch
-            {
-                ContentTypeEnum.Json => "application/json",
-                ContentTypeEnum.Xml => "application/xml",
-                _ => throw new NotImplementedException()
-            };
         }
     }
 }
