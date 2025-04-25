@@ -6,5 +6,7 @@ namespace Rhinero.Shouter.Client
     {
         Task<Guid> ShoutAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default);
         Guid Shout(Buses bus, Protocol protocol, object payload);
+        Task<string> ReplyAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default);
+        string Reply(Buses bus, Protocol protocol, object payload);
     }
 }

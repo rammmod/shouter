@@ -2,9 +2,7 @@
 using Rhinero.Shouter.Contracts.Payloads.Http;
 using Rhinero.Shouter.Helpers;
 using Rhinero.Shouter.Interfaces;
-using Rhinero.Shouter.Shared;
 using Rhinero.Shouter.Shared.Extensions;
-using System.Net.Http.Headers;
 using System.Text;
 
 namespace Rhinero.Shouter.Services.Callbacks
@@ -22,6 +20,21 @@ namespace Rhinero.Shouter.Services.Callbacks
         public async Task SendAsync(ShouterMessage message, CancellationToken cancellationToken)
         {
             var payload = message.Payload.FromJson<HttpPayload>();
+            var correlationId = message.CorrelationId;
+
+            await CallAsync(payload, correlationId, cancellationToken);
+        }
+
+        public async Task<object> ReplyAsync(ShouterRequestMessage message, CancellationToken cancellationToken)
+        {
+            var payload = message.Payload.FromJson<HttpPayload>();
+            var correlationId = message.CorrelationId;
+
+            return await CallAsync(payload, correlationId, cancellationToken);
+        }
+
+        public async Task<object> CallAsync(HttpPayload payload, Guid correlationId, CancellationToken cancellationToken)
+        {
             var uriBuilder = new StringBuilder(payload.Uri.AbsoluteUri);
 
             HttpHelper.EnrichWithQueryParameters(uriBuilder, payload);
@@ -41,7 +54,8 @@ namespace Rhinero.Shouter.Services.Callbacks
             HttpHelper.EnrichWithToken(request, payload);
 
             using var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+
+            return response;
         }
     }
 }

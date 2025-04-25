@@ -33,6 +33,8 @@ namespace Rhinero.Shouter.Client
                 {
                     x.AddDelayedMessageScheduler();
 
+                    x.AddRequestClient<ShouterRequestMessage>(new Uri("queue:" + shouterRabbitMQConfiguration.ReplyQueue));
+
                     x.UsingRabbitMq((context, cfg) =>
                     {
                         cfg.Host(shouterRabbitMQConfiguration.Hostname, shouterRabbitMQConfiguration.Port, shouterRabbitMQConfiguration.VirtualHost, h =>
@@ -51,7 +53,7 @@ namespace Rhinero.Shouter.Client
 
                             x.BindQueue(
                                 shouterRabbitMQConfiguration.Exchange,
-                                shouterRabbitMQConfiguration.Queue,
+                                shouterRabbitMQConfiguration.PublishQueue,
                                 qc =>
                                 {
                                     qc.SetQuorumQueue();

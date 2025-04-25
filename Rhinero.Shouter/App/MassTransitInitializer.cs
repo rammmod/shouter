@@ -24,6 +24,7 @@ namespace Rhinero.Shouter.App
                     services.AddMassTransit<IShouterRabbitMQBus>(x =>
                     {
                         x.AddConsumer<ShouterRabbitMQConsumer>();
+                        x.AddConsumer<ShouterRabbitMQReplyConsumer>();
 
                         x.UsingRabbitMq((context, cfg) =>
                         {
@@ -38,7 +39,7 @@ namespace Rhinero.Shouter.App
                                     h.Password(rabbitMQConfiguration.Password);
                             });
 
-                            cfg.ReceiveEndpoint(rabbitMQConfiguration.Queue, qc =>
+                            cfg.ReceiveEndpoint(rabbitMQConfiguration.PublishQueue, qc =>
                             {
                                 qc.SetQueueArgument("x-queue-type", "quorum");
                                 qc.Durable = true;
@@ -48,7 +49,14 @@ namespace Rhinero.Shouter.App
 
                                 qc.ConfigureConsumer<ShouterRabbitMQConsumer>(context);
                             });
+                            
+                            cfg.ReceiveEndpoint(rabbitMQConfiguration.ReplyQueue, qc =>
+                            {
+                                qc.Durable = false;
+                                qc.AutoDelete = true;
 
+                                qc.ConfigureConsumer<ShouterRabbitMQReplyConsumer>(context);
+                            });
                         });
                     });
                 }

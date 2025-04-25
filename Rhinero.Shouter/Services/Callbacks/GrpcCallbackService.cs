@@ -25,7 +25,21 @@ namespace Rhinero.Shouter.Services.Callbacks
         public async Task SendAsync(ShouterMessage message, CancellationToken cancellationToken)
         {
             var payload = message.Payload.FromJson<GrpcPayload>();
+            var correlationId = message.CorrelationId;
 
+            await CallAsync(payload, correlationId, cancellationToken);
+        }
+
+        public async Task<object> ReplyAsync(ShouterRequestMessage message, CancellationToken cancellationToken)
+        {
+            var payload = message.Payload.FromJson<GrpcPayload>();
+            var correlationId = message.CorrelationId;
+
+            return await CallAsync(payload, correlationId, cancellationToken);
+        }
+
+        private async Task<object> CallAsync(GrpcPayload payload, Guid correlationId, CancellationToken cancellationToken)
+        {
             var (clientType, requestType, replyType) = GrpcHelper.GetMessageTypes(_protoCache, payload);
 
             using var channel = GrpcChannel.ForAddress(payload.Uri);
@@ -48,20 +62,22 @@ namespace Rhinero.Shouter.Services.Callbacks
 
             if (result?.GetType() is null)
             {
-                _logger.LogInformation($"Method returned null. Method: {requestMethod.Name}, CorrelationId: {message.CorrelationId}");
-                return;
+                _logger.LogInformation($"Method returned null. Method: {requestMethod.Name}, CorrelationId: {correlationId}");
+                return null;
             }
 
             var response = await GrpcHelper.GetResponseFromInvokationAsync(result);
 
             if (response is null)
             {
-                _logger.LogInformation($"No response received. CorrelationId: {message.CorrelationId}");
-                return;
+                _logger.LogInformation($"No response received. CorrelationId: {correlationId}");
+                return null;
             }
 
             string json = JsonFormatter.Default.Format(response as IMessage);
             dynamic dynamicObject = json.FromJson<ExpandoObject>();
+
+            return dynamicObject;
         }
     }
 }

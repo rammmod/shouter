@@ -74,5 +74,30 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
 
             return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
         }
+
+        [HttpPost(nameof(ReplyGrpcMessage))]
+        public async Task<string> ReplyGrpcMessage()
+        {
+            var grpcMessage = new GrpcPayload()
+            {
+                Uri = new Uri("http://localhost:5215"),
+                Service = new GrpcService()
+                {
+                    FileName = "AAA",
+                    ClientName = null
+                },
+                RequestArgumentName = "HelloRequest",
+                RequestMethod = "SayHelloAsync",
+                RequestParameters = new Dictionary<string, string>()
+                {
+                    {"Name", "AAA"},
+                },
+                ResponseArgumentName = "HelloReply",
+            };
+
+            var x = await _shouter.ReplyAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
+
+            return x;
+        }
     }
 }

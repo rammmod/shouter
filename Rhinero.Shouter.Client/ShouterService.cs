@@ -30,14 +30,18 @@ namespace Rhinero.Shouter.Client
         public Guid Shout(Buses bus, Protocol protocol, object payload) =>
             ShoutMessage(bus, protocol, payload, CancellationToken.None).GetAwaiter().GetResult();
 
+        public async Task<string> ReplyAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default) =>
+            await ReplyMessage(bus, protocol, payload, cancellationToken);
+
+        public string Reply(Buses bus, Protocol protocol, object payload) =>
+            ReplyMessage(bus, protocol, payload, CancellationToken.None).GetAwaiter().GetResult();
+
         private async Task<Guid> ShoutMessage(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default)
         {
-            ShouterInterfaceChecker.CheckShouterMessageInterface(payload);
-            ShouterInterfaceChecker.CheckProtocolAndMessage(protocol, payload);
-            ShouterInterfaceChecker.CheckForHttpPayload(protocol, payload);
-
             if (cancellationToken == default)
                 cancellationToken = new CancellationTokenSource(Constants.CancellationTokenTimeSpan).Token;
+
+            CheckPayload(payload, protocol);
 
             var message = new ShouterMessage()
             {
@@ -56,6 +60,34 @@ namespace Rhinero.Shouter.Client
             };
 
             return message.CorrelationId;
+        }
+
+        private async Task<string> ReplyMessage(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken == default)
+                cancellationToken = new CancellationTokenSource(Constants.CancellationTokenTimeSpan).Token;
+
+            CheckPayload(payload, protocol);
+
+            var message = new ShouterRequestMessage()
+            {
+                Protocol = MapProtocol(protocol),
+                Payload = payload.ToJson()
+            };
+
+            ShouterReplyMessage response = null;
+
+            switch (bus)
+            {
+                case Buses.RabbitMQ:
+                    response = await ReplyUsingRabbitMQ<ShouterReplyMessage>(message, cancellationToken);
+                    break;
+                //case Buses.Kafka:
+                //    response = await ReplyUsingKafka<ShouterReplyMessage>(message, cancellationToken);
+                //    break;
+            };
+
+            return response.Payload;
         }
 
         private async Task PublishToRabbitMQ(ShouterMessage message, CancellationToken cancellationToken)
@@ -94,6 +126,34 @@ namespace Rhinero.Shouter.Client
             }
         }
 
+        private async Task<ShouterReplyMessage> ReplyUsingRabbitMQ<T>(ShouterRequestMessage message, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var scope = _provider.CreateScope();
+
+                var bus = scope.ServiceProvider.GetRequiredService<IShouterRabbitMQBus>();
+                
+                var client = bus.CreateRequestClient<ShouterRequestMessage>();
+
+                var response = await client.GetResponse<ShouterReplyMessage>(message, cancellationToken);
+
+                return response.Message;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogReplyError(nameof(ShouterRequestMessage), message, ex);
+                throw new RabbitMQReplyException();
+            }
+        }
+
+        private static void CheckPayload(object payload, Protocol protocol)
+        {
+            ShouterInterfaceChecker.CheckShouterMessageInterface(payload);
+            ShouterInterfaceChecker.CheckProtocolAndMessage(protocol, payload);
+            ShouterInterfaceChecker.CheckForHttpPayload(protocol, payload);
+        }
+
         private static ProtocolEnum MapProtocol(Protocol protocol)
         {
             return protocol switch
@@ -103,5 +163,6 @@ namespace Rhinero.Shouter.Client
                 _ => throw new NotImplementedException()
             };
         }
+
     }
 }

@@ -16,7 +16,9 @@ namespace Rhinero.Shouter.App
 
         public string Password { get; set; }
 
-        public string Queue { get; set; } = Constants.DefaultRabbitMQ.Queue;
+        public string PublishQueue { get; set; } = Constants.DefaultRabbitMQ.PublishQueue;
+
+        public string ReplyQueue { get; set; } = Constants.DefaultRabbitMQ.ReplyQueue;
 
         public int PrefetchCount { get; set; } = Constants.DefaultRabbitMQ.PrefetchCount;
 

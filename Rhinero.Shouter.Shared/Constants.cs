@@ -5,7 +5,8 @@
         internal static class DefaultRabbitMQ
         {
             internal const string Exchange = "ShouterExchange";
-            internal const string Queue = "ShouterQueue";
+            internal const string PublishQueue = "ShouterPublishQueue";
+            internal const string ReplyQueue = "ShouterReplyQueue";
             internal const string VirtualHost = "/";
             internal const int Port = 5672;
             internal const int PrefetchCount = 16;
