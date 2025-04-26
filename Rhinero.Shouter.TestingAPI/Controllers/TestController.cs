@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rhinero.Shouter.Client;
+using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Enums;
 using Rhinero.Shouter.Contracts.Payloads.Grpc;
 using Rhinero.Shouter.Contracts.Payloads.Http;
@@ -76,7 +77,7 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
         }
 
         [HttpPost(nameof(ReplyGrpcMessage))]
-        public async Task<string> ReplyGrpcMessage()
+        public async Task<ShouterReplyMessage> ReplyGrpcMessage()
         {
             var grpcMessage = new GrpcPayload()
             {
@@ -95,7 +96,7 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
                 ResponseArgumentName = "HelloReply",
             };
 
-            var x = await _shouter.ReplyAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
+            var x = await _shouter.ReplyAsync(Buses.Kafka, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
 
             return x;
         }

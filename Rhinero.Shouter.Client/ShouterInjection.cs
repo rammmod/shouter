@@ -33,7 +33,7 @@ namespace Rhinero.Shouter.Client
                 {
                     x.AddDelayedMessageScheduler();
 
-                    x.AddRequestClient<ShouterRequestMessage>(new Uri("queue:" + shouterRabbitMQConfiguration.ReplyQueue));
+                    x.AddRequestClient<ShouterRequestMessage>(new Uri(Shared.Constants.MassTransit.Queue + shouterRabbitMQConfiguration.ReplyQueue));
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
@@ -72,6 +72,8 @@ namespace Rhinero.Shouter.Client
                     x.UsingInMemory();
 
                     x.AddDelayedMessageScheduler();
+
+                    x.AddRequestClient<ShouterRequestMessage>(new Uri(Shared.Constants.MassTransit.Topic + shouterRabbitMQConfiguration.ReplyQueue));
 
                     x.AddRider(r =>
                     {

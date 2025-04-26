@@ -1,4 +1,5 @@
-﻿using Rhinero.Shouter.Contracts.Enums;
+﻿using Rhinero.Shouter.Contracts;
+using Rhinero.Shouter.Contracts.Enums;
 
 namespace Rhinero.Shouter.Client
 {
@@ -6,7 +7,7 @@ namespace Rhinero.Shouter.Client
     {
         Task<Guid> ShoutAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default);
         Guid Shout(Buses bus, Protocol protocol, object payload);
-        Task<string> ReplyAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default);
-        string Reply(Buses bus, Protocol protocol, object payload);
+        Task<ShouterReplyMessage> ReplyAsync(Buses bus, Protocol protocol, object payload, CancellationToken cancellationToken = default);
+        ShouterReplyMessage Reply(Buses bus, Protocol protocol, object payload);
     }
 }

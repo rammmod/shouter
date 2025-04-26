@@ -19,6 +19,12 @@
             internal const string Group = "ShouterGroup";
         }
 
+        internal static class MassTransit
+        {
+            internal const string Queue = "queue:";
+            internal const string Topic = "topic:";
+        }
+
         internal static class StringCharacters
         {
             internal const string Ampersand = "&";

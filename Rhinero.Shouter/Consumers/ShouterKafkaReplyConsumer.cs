@@ -5,13 +5,13 @@ using Rhinero.Shouter.Shared.Extensions;
 
 namespace Rhinero.Shouter.Consumers
 {
-    public class ShouterRabbitMQReplyConsumer : IConsumer<ShouterRequestMessage>
+    public class ShouterKafkaReplyConsumer : IConsumer<ShouterRequestMessage>
     {
-        private readonly ILogger<ShouterRabbitMQReplyConsumer> _logger;
+        private readonly ILogger<ShouterKafkaReplyConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
 
-        public ShouterRabbitMQReplyConsumer(
-            ILogger<ShouterRabbitMQReplyConsumer> logger,
+        public ShouterKafkaReplyConsumer(
+            ILogger<ShouterKafkaReplyConsumer> logger,
             IServiceProvider serviceProvider)
         {
             _logger = logger;
