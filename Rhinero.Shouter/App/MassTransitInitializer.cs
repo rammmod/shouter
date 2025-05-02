@@ -2,6 +2,7 @@
 using MassTransit;
 using Rhinero.Shouter.Consumers;
 using Rhinero.Shouter.Contracts;
+using Rhinero.Shouter.Shared;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 
@@ -70,6 +71,9 @@ namespace Rhinero.Shouter.App
                         x.AddRider(r =>
                         {
                             r.AddConsumer<ShouterKafkaConsumer>();
+                            r.AddConsumer<ShouterKafkaRequestConsumer>();
+
+                            r.AddProducer<ShouterReplyMessage>(kafkaConfiguration.ReplyTopic);
 
                             r.UsingKafka((context, k) =>
                             {
@@ -88,7 +92,7 @@ namespace Rhinero.Shouter.App
                                     });
                                 });
 
-                                k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.Topic, kafkaConfiguration.Group, e =>
+                                k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.PublishTopic, kafkaConfiguration.PublishGroup, e =>
                                 {
                                     e.PrefetchCount = 16; //TODO: make configurable
                                     e.ConcurrentMessageLimit = 16;
@@ -96,10 +100,24 @@ namespace Rhinero.Shouter.App
                                     e.ConcurrentConsumerLimit = 16;
                                     e.ConfigureConsumeTopology = true;
                                     e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
 
                                     e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
                                     e.ConfigureConsumer<ShouterKafkaConsumer>(context);
-                                    //e.Consumer<ShouterKafkaConsumer>(context);
+                                });
+
+                                k.TopicEndpoint<ShouterRequestMessage>(kafkaConfiguration.RequestTopic, kafkaConfiguration.RequestGroup, e =>
+                                {
+                                    e.PrefetchCount = 16; //TODO: make configurable
+                                    e.ConcurrentMessageLimit = 16;
+                                    e.ConcurrentDeliveryLimit = 16;
+                                    e.ConcurrentConsumerLimit = 16;
+                                    e.ConfigureConsumeTopology = true;
+                                    e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
+
+                                    e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
+                                    e.ConfigureConsumer<ShouterKafkaRequestConsumer>(context);
                                 });
                             });
                         });

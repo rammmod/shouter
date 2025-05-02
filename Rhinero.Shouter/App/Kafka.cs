@@ -8,8 +8,14 @@ namespace Rhinero.Shouter.App
         [Required]
         public string BootstrapServers { get; set; }
 
-        public string Topic { get; set; } = Constants.DefaultKafka.Topic;
+        public string PublishTopic { get; set; } = Constants.DefaultKafka.PublishTopic;
 
-        public string Group { get; set; } = Constants.DefaultKafka.Group;
+        public string PublishGroup { get; set; } = Constants.DefaultKafka.PublishGroup;
+
+        public string RequestTopic { get; set; } = Constants.DefaultKafka.RequestTopic;
+
+        public string RequestGroup { get; set; } = Constants.DefaultKafka.RequestGroup;
+
+        public string ReplyTopic { get; set; } = Constants.DefaultKafka.ReplyTopic;
     }
 }

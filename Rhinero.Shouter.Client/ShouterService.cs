@@ -2,6 +2,7 @@
 using MassTransit.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Rhinero.Shouter.Client.Redis;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Contracts.Enums;
 using Rhinero.Shouter.Shared;
@@ -45,6 +46,7 @@ namespace Rhinero.Shouter.Client
 
             var message = new ShouterMessage()
             {
+                CorrelationId = Guid.NewGuid(),
                 Protocol = MapProtocol(protocol),
                 Payload = payload.ToJson()
             };
@@ -71,6 +73,7 @@ namespace Rhinero.Shouter.Client
 
             var message = new ShouterRequestMessage()
             {
+                CorrelationId = Guid.NewGuid(),
                 Protocol = MapProtocol(protocol),
                 Payload = payload.ToJson()
             };
@@ -153,18 +156,34 @@ namespace Rhinero.Shouter.Client
             {
                 using var scope = _provider.CreateScope();
 
-                var bus = scope.ServiceProvider.GetRequiredService<IShouterKafkaBus>();
+                var topicProducer =
+                    scope.ServiceProvider.GetRequiredService<ITopicProducer<ShouterRequestMessage>>();
 
-                var client = bus.CreateRequestClient<ShouterRequestMessage>();
+                var redisStorage = scope.ServiceProvider.GetRequiredService<IRedisStorage>();
 
-                var response = await client.GetResponse<ShouterReplyMessage>(message, cancellationToken);
+                await topicProducer.Produce(message, cancellationToken);
 
-                return response.Message;
+                string shouterReplyMessageJson = null;
+
+                TimeSpan duration = TimeSpan.FromSeconds(Constants.ReplyTimeout.LifetimeDouble);
+                DateTime start = DateTime.UtcNow;
+
+                while (DateTime.UtcNow - start < duration)
+                {
+                    shouterReplyMessageJson = await redisStorage.GetAsync(message.CorrelationId.ToString());
+                    
+                    if (!string.IsNullOrWhiteSpace(shouterReplyMessageJson))
+                        break;
+
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                }
+
+                return shouterReplyMessageJson.FromJson<ShouterReplyMessage>();
             }
             catch (Exception ex)
             {
                 _logger.LogReplyError(nameof(ShouterRequestMessage), message, ex);
-                throw new RabbitMQReplyException();
+                throw new KafkaReplyException();
             }
         }
 

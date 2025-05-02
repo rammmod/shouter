@@ -76,8 +76,8 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             return await _shouter.ShoutAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
         }
 
-        [HttpPost(nameof(ReplyGrpcMessage))]
-        public async Task<ShouterReplyMessage> ReplyGrpcMessage()
+        [HttpPost(nameof(ReplyKafkaGrpcMessage))]
+        public async Task<ShouterReplyMessage> ReplyKafkaGrpcMessage()
         {
             var grpcMessage = new GrpcPayload()
             {
@@ -97,6 +97,31 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             };
 
             var x = await _shouter.ReplyAsync(Buses.Kafka, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
+
+            return x;
+        }
+
+        [HttpPost(nameof(ReplyRabbitMQGrpcMessage))]
+        public async Task<ShouterReplyMessage> ReplyRabbitMQGrpcMessage()
+        {
+            var grpcMessage = new GrpcPayload()
+            {
+                Uri = new Uri("http://localhost:5215"),
+                Service = new GrpcService()
+                {
+                    FileName = "AAA",
+                    ClientName = null
+                },
+                RequestArgumentName = "HelloRequest",
+                RequestMethod = "SayHelloAsync",
+                RequestParameters = new Dictionary<string, string>()
+                {
+                    {"Name", "AAA"},
+                },
+                ResponseArgumentName = "HelloReply",
+            };
+
+            var x = await _shouter.ReplyAsync(Buses.RabbitMQ, Protocol.gRPC, grpcMessage, HttpContext.RequestAborted);
 
             return x;
         }

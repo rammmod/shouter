@@ -15,8 +15,12 @@
 
         internal static class DefaultKafka
         {
-            internal const string Topic = "ShouterTopic";
-            internal const string Group = "ShouterGroup";
+            internal const string PublishTopic = "ShouterPublishTopic";
+            internal const string PublishGroup = "ShouterGroup";
+            internal const string RequestTopic = "ShouterRequestTopic";
+            internal const string RequestGroup = "ShouterRequestGroup";
+            internal const string ReplyTopic = "ShouterReplyTopic";
+            internal const string ReplyGroup = "ShouterReplyGroup";
         }
 
         internal static class MassTransit
@@ -75,6 +79,17 @@
         {
             internal const string Result = "Result";
             internal const string ResponseAsync = "ResponseAsync";
+        }
+
+        internal static class Redis
+        {
+            internal const double Lifetime = 60;
+        }
+
+        internal static class ReplyTimeout
+        {
+            internal const double LifetimeDouble = 30;
+            internal const int LifetimeInt = 30;
         }
 
         internal static TimeSpan CancellationTokenTimeSpan = new TimeSpan(0, 0, 5);

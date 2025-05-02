@@ -1,17 +1,19 @@
-﻿using MassTransit;
+﻿using Confluent.Kafka;
+using MassTransit;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Interfaces;
 using Rhinero.Shouter.Shared.Extensions;
+using System.Threading;
 
 namespace Rhinero.Shouter.Consumers
 {
-    public class ShouterKafkaReplyConsumer : IConsumer<ShouterRequestMessage>
+    public class ShouterKafkaRequestConsumer : IConsumer<ShouterRequestMessage>
     {
-        private readonly ILogger<ShouterKafkaReplyConsumer> _logger;
+        private readonly ILogger<ShouterKafkaRequestConsumer> _logger;
         private readonly IServiceProvider _serviceProvider;
 
-        public ShouterKafkaReplyConsumer(
-            ILogger<ShouterKafkaReplyConsumer> logger,
+        public ShouterKafkaRequestConsumer(
+            ILogger<ShouterKafkaRequestConsumer> logger,
             IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -20,9 +22,12 @@ namespace Rhinero.Shouter.Consumers
 
         public async Task Consume(ConsumeContext<ShouterRequestMessage> context)
         {
-            _logger.LogInformation("Processing RabbitMQ message: {@message}", context.Message);
+            _logger.LogInformation("Processing Kafka message: {@message}", context.Message);
 
             var service = _serviceProvider.GetRequiredKeyedService<ICallbackService>(context.Message.Protocol);
+
+            var topicProducer =
+                _serviceProvider.GetRequiredService<ITopicProducer<ShouterReplyMessage>>();
 
             object payload = null;
             string error = null;
@@ -43,7 +48,7 @@ namespace Rhinero.Shouter.Consumers
                 Error = error
             };
 
-            await context.RespondAsync(replyMessage);
+            await topicProducer.Produce(replyMessage, context.CancellationToken);
         }
     }
 }

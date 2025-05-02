@@ -25,7 +25,6 @@ namespace Rhinero.Shouter.App
             services.TryAddSingleton<IProtoCache, ProtoCache>();
 
             services.AddHttpClient();
-            //TODO: add services
 
             services.AddMassTransit(configuration);
 

@@ -3,8 +3,11 @@ using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Rhinero.Shouter.Client.Configuration;
+using Rhinero.Shouter.Client.Consumers;
+using Rhinero.Shouter.Client.Redis;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
@@ -17,8 +20,12 @@ namespace Rhinero.Shouter.Client
         {
             services.TryAddSingleton<IShouter, ShouterService>();
 
-            var shouterConfiguration =
-                configuration.GetSection(nameof(ShouterConfiguration)).Get<ShouterConfiguration>();
+            var shouterConfigurationSection = configuration.GetSection(nameof(ShouterConfiguration));
+
+            services.Configure<ShouterConfiguration>(shouterConfigurationSection);
+            services.TryAddSingleton(sp => sp.GetRequiredService<IOptions<ShouterConfiguration>>().Value);
+
+            var shouterConfiguration = shouterConfigurationSection.Get<ShouterConfiguration>();
 
             var shouterRabbitMQConfiguration = shouterConfiguration?.RabbitMQ;
 
@@ -33,7 +40,9 @@ namespace Rhinero.Shouter.Client
                 {
                     x.AddDelayedMessageScheduler();
 
-                    x.AddRequestClient<ShouterRequestMessage>(new Uri(Shared.Constants.MassTransit.Queue + shouterRabbitMQConfiguration.ReplyQueue));
+                    x.AddRequestClient<ShouterRequestMessage>(
+                        new Uri(Shared.Constants.MassTransit.Queue + shouterRabbitMQConfiguration.ReplyQueue),
+                        RequestTimeout.After(s: Shared.Constants.ReplyTimeout.LifetimeInt));
 
                     x.UsingRabbitMq((context, cfg) =>
                     {
@@ -67,18 +76,21 @@ namespace Rhinero.Shouter.Client
 
             if (shouterKafkaConfiguration is not null)
             {
+                services.AddSingleton<IRedisStorage, RedisStorage>();
+
                 services.AddMassTransit<IShouterKafkaBus>(x =>
                 {
                     x.UsingInMemory();
 
                     x.AddDelayedMessageScheduler();
 
-                    x.AddRequestClient<ShouterRequestMessage>(new Uri(Shared.Constants.MassTransit.Topic + shouterRabbitMQConfiguration.ReplyQueue));
-
                     x.AddRider(r =>
                     {
-                        r.AddProducer<ShouterMessage>(shouterKafkaConfiguration.Topic);
+                        r.AddConsumer<ShouterKafkaReplyConsumer>();
 
+                        r.AddProducer<ShouterMessage>(shouterKafkaConfiguration.PublishTopic);
+                        r.AddProducer<ShouterRequestMessage>(shouterKafkaConfiguration.RequestTopic);
+                        
                         r.UsingKafka((context, k) =>
                         {
                             k.Host(shouterKafkaConfiguration.BootstrapServers, h =>
@@ -94,6 +106,20 @@ namespace Rhinero.Shouter.Client
                                 {
                                     s.EnableSslCertificateVerification = false; //TODO: add to config
                                 });
+                            });
+
+                            k.TopicEndpoint<ShouterReplyMessage>(shouterKafkaConfiguration.ReplyTopic, shouterKafkaConfiguration.ReplyGroup, e =>
+                            {
+                                e.PrefetchCount = 16; //TODO: make configurable
+                                e.ConcurrentMessageLimit = 16;
+                                e.ConcurrentDeliveryLimit = 16;
+                                e.ConcurrentConsumerLimit = 16;
+                                e.ConfigureConsumeTopology = true;
+                                e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
+                                e.CheckpointInterval = TimeSpan.FromSeconds(30);
+
+                                e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
+                                e.ConfigureConsumer<ShouterKafkaReplyConsumer>(context);
                             });
                         });
                     });

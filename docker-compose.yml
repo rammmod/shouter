@@ -40,6 +40,16 @@ services:
       - elasticsearch
     networks:
       - app-network
+      
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
 
 networks:
   app-network:
@@ -47,3 +57,4 @@ networks:
 
 volumes:
   esdata:
+  redis-data:
