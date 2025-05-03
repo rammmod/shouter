@@ -1,10 +1,12 @@
 ﻿using Confluent.Kafka;
 using MassTransit;
+using Microsoft.Extensions.Options;
 using Rhinero.Shouter.Consumers;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
+using Rhinero.Shouter.Shared.RetryOptions;
 
 namespace Rhinero.Shouter.App
 {
@@ -20,6 +22,9 @@ namespace Rhinero.Shouter.App
                 if (rabbitMQConfiguration is null && kafkaConfiguration is null)
                     throw new ShouterBusConfigurationException();
 
+                services.Configure<RetryOptions>(configuration.GetSection("Retry"));
+                services.AddSingleton<IValidateOptions<RetryOptions>, RetryOptionsValidator>();
+
                 if (rabbitMQConfiguration is not null)
                 {
                     services.AddMassTransit<IShouterRabbitMQBus>(x =>
@@ -29,8 +34,6 @@ namespace Rhinero.Shouter.App
 
                         x.UsingRabbitMq((context, cfg) =>
                         {
-                            cfg.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
-
                             cfg.Host(rabbitMQConfiguration.Hostname, rabbitMQConfiguration.Port, rabbitMQConfiguration.VirtualHost, h =>
                             {
                                 if (!string.IsNullOrWhiteSpace(rabbitMQConfiguration.UserName))
@@ -40,6 +43,8 @@ namespace Rhinero.Shouter.App
                                     h.Password(rabbitMQConfiguration.Password);
                             });
 
+                            var retryOptions = context.GetRequiredService<IOptions<RetryOptions>>().Value;
+
                             cfg.ReceiveEndpoint(rabbitMQConfiguration.PublishQueue, qc =>
                             {
                                 qc.SetQueueArgument("x-queue-type", "quorum");
@@ -48,6 +53,7 @@ namespace Rhinero.Shouter.App
                                 qc.PrefetchCount = rabbitMQConfiguration.PrefetchCount;
                                 qc.ConcurrentMessageLimit = rabbitMQConfiguration.ConcurrentMessageLimit;
 
+                                qc.ConfigureRetry(retryOptions);
                                 qc.ConfigureConsumer<ShouterRabbitMQConsumer>(context);
                             });
                             
@@ -56,6 +62,7 @@ namespace Rhinero.Shouter.App
                                 qc.Durable = false;
                                 qc.AutoDelete = true;
 
+                                qc.ConfigureRetry(retryOptions);
                                 qc.ConfigureConsumer<ShouterRabbitMQReplyConsumer>(context);
                             });
                         });
@@ -77,12 +84,14 @@ namespace Rhinero.Shouter.App
 
                             r.UsingKafka((context, k) =>
                             {
+                                var retryOptions = context.GetRequiredService<IOptions<RetryOptions>>().Value;
+
                                 k.Host(kafkaConfiguration.BootstrapServers, h =>
                                 {
                                     h.UseSasl(s =>
                                     {
                                         //s.Username = "your-username"; //TODO: add to config
-                                        //s.Password = "your-password";
+                                        //s.Password = "your-password"; //TODO: add to config
                                         s.Mechanism = SaslMechanism.Plain;
                                     });
 
@@ -95,28 +104,32 @@ namespace Rhinero.Shouter.App
                                 k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.PublishTopic, kafkaConfiguration.PublishGroup, e =>
                                 {
                                     e.PrefetchCount = 16; //TODO: make configurable
-                                    e.ConcurrentMessageLimit = 16;
-                                    e.ConcurrentDeliveryLimit = 16;
-                                    e.ConcurrentConsumerLimit = 16;
+                                    e.ConcurrentMessageLimit = 16; //TODO: make configurable
+                                    e.ConcurrentDeliveryLimit = 16; //TODO: make configurable
+                                    e.ConcurrentConsumerLimit = 16; //TODO: make configurable
                                     e.ConfigureConsumeTopology = true;
                                     e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
-                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30); //TODO: make configurable
 
-                                    e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
+                                    //TODO: add error and skipped topics
+
+                                    e.ConfigureRetry(retryOptions);
                                     e.ConfigureConsumer<ShouterKafkaConsumer>(context);
                                 });
 
                                 k.TopicEndpoint<ShouterRequestMessage>(kafkaConfiguration.RequestTopic, kafkaConfiguration.RequestGroup, e =>
                                 {
                                     e.PrefetchCount = 16; //TODO: make configurable
-                                    e.ConcurrentMessageLimit = 16;
-                                    e.ConcurrentDeliveryLimit = 16;
-                                    e.ConcurrentConsumerLimit = 16;
+                                    e.ConcurrentMessageLimit = 16; //TODO: make configurable
+                                    e.ConcurrentDeliveryLimit = 16; //TODO: make configurable
+                                    e.ConcurrentConsumerLimit = 16; //TODO: make configurable
                                     e.ConfigureConsumeTopology = true;
                                     e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
-                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30); //TODO: make configurable
 
-                                    e.UseMessageRetry(r => r.Interval(10, 1)); //TODO: make configurable
+                                    //TODO: add error and skipped topics
+
+                                    e.ConfigureRetry(retryOptions);
                                     e.ConfigureConsumer<ShouterKafkaRequestConsumer>(context);
                                 });
                             });

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rhinero.Shouter.App
 {
-    public class RabbitMQ
+    internal class RabbitMQ
     {
         [Required]
         public string Hostname { get; set; }

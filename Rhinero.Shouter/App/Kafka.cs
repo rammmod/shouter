@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Rhinero.Shouter.App
 {
-    public class Kafka
+    internal class Kafka
     {
         [Required]
         public string BootstrapServers { get; set; }
