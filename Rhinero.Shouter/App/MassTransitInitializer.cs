@@ -103,13 +103,13 @@ namespace Rhinero.Shouter.App
 
                                 k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.PublishTopic, kafkaConfiguration.PublishGroup, e =>
                                 {
-                                    e.PrefetchCount = 16; //TODO: make configurable
-                                    e.ConcurrentMessageLimit = 16; //TODO: make configurable
-                                    e.ConcurrentDeliveryLimit = 16; //TODO: make configurable
-                                    e.ConcurrentConsumerLimit = 16; //TODO: make configurable
+                                    e.PrefetchCount = kafkaConfiguration.PrefetchCount!.Value;
+                                    e.ConcurrentMessageLimit = kafkaConfiguration.ConcurrentMessageLimit!.Value;
+                                    e.ConcurrentDeliveryLimit = kafkaConfiguration.ConcurrentDeliveryLimit!.Value;
+                                    e.ConcurrentConsumerLimit = kafkaConfiguration.ConcurrentConsumerLimit!.Value;
                                     e.ConfigureConsumeTopology = true;
-                                    e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
-                                    e.CheckpointInterval = TimeSpan.FromSeconds(30); //TODO: make configurable
+                                    e.AutoOffsetReset = AutoOffsetReset.Latest;
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
 
                                     //TODO: add error and skipped topics
 
@@ -119,13 +119,13 @@ namespace Rhinero.Shouter.App
 
                                 k.TopicEndpoint<ShouterRequestMessage>(kafkaConfiguration.RequestTopic, kafkaConfiguration.RequestGroup, e =>
                                 {
-                                    e.PrefetchCount = 16; //TODO: make configurable
-                                    e.ConcurrentMessageLimit = 16; //TODO: make configurable
-                                    e.ConcurrentDeliveryLimit = 16; //TODO: make configurable
-                                    e.ConcurrentConsumerLimit = 16; //TODO: make configurable
+                                    e.PrefetchCount = kafkaConfiguration.PrefetchCount!.Value;
+                                    e.ConcurrentMessageLimit = kafkaConfiguration.ConcurrentMessageLimit!.Value;
+                                    e.ConcurrentDeliveryLimit = kafkaConfiguration.ConcurrentDeliveryLimit!.Value;
+                                    e.ConcurrentConsumerLimit = kafkaConfiguration.ConcurrentConsumerLimit!.Value;
                                     e.ConfigureConsumeTopology = true;
-                                    e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
-                                    e.CheckpointInterval = TimeSpan.FromSeconds(30); //TODO: make configurable
+                                    e.AutoOffsetReset = AutoOffsetReset.Latest;
+                                    e.CheckpointInterval = TimeSpan.FromSeconds(30);
 
                                     //TODO: add error and skipped topics
 

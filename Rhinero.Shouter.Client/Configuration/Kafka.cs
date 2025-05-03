@@ -13,6 +13,11 @@ namespace Rhinero.Shouter.Client.Configuration
         public string ReplyTopic { get; set; } = Constants.DefaultKafka.ReplyTopic;
         public string ReplyGroup { get; set; } = Constants.DefaultKafka.ReplyGroup;
 
+        public int? PrefetchCount { get; set; } = 16;
+        public int? ConcurrentMessageLimit { get; set; } = 16;
+        public int? ConcurrentDeliveryLimit { get; set; } = 16;
+        public ushort? ConcurrentConsumerLimit { get; set; } = 16;
+
         [Required]
         public Redis Redis { get; set; }
     }

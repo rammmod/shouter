@@ -116,13 +116,13 @@ namespace Rhinero.Shouter.Client
 
                             k.TopicEndpoint<ShouterReplyMessage>(shouterKafkaConfiguration.ReplyTopic, shouterKafkaConfiguration.ReplyGroup, e =>
                             {
-                                e.PrefetchCount = 16; //TODO: make configurable
-                                e.ConcurrentMessageLimit = 16; //TODO: make configurable
-                                e.ConcurrentDeliveryLimit = 16; //TODO: make configurable
-                                e.ConcurrentConsumerLimit = 16; //TODO: make configurable
+                                e.PrefetchCount = shouterKafkaConfiguration.PrefetchCount!.Value;
+                                e.ConcurrentMessageLimit = shouterKafkaConfiguration.ConcurrentMessageLimit!.Value;
+                                e.ConcurrentDeliveryLimit = shouterKafkaConfiguration.ConcurrentDeliveryLimit!.Value;
+                                e.ConcurrentConsumerLimit = shouterKafkaConfiguration.ConcurrentConsumerLimit!.Value;
                                 e.ConfigureConsumeTopology = true;
-                                e.AutoOffsetReset = AutoOffsetReset.Latest; //TODO: make configurable
-                                e.CheckpointInterval = TimeSpan.FromSeconds(30); //TODO: make configurable
+                                e.AutoOffsetReset = AutoOffsetReset.Latest;
+                                e.CheckpointInterval = TimeSpan.FromSeconds(30);
 
                                 //TODO: add error and skipped topics
 
