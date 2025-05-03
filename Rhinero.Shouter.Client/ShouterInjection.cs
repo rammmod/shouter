@@ -12,6 +12,7 @@ using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 using Rhinero.Shouter.Shared.RetryOptions;
+using System.Runtime.Intrinsics.X86;
 
 namespace Rhinero.Shouter.Client
 {
@@ -94,24 +95,58 @@ namespace Rhinero.Shouter.Client
 
                         r.AddProducer<ShouterMessage>(shouterKafkaConfiguration.PublishTopic);
                         r.AddProducer<ShouterRequestMessage>(shouterKafkaConfiguration.RequestTopic);
-                        
+
                         r.UsingKafka((context, k) =>
                         {
                             var retryOptions = context.GetRequiredService<IOptions<RetryOptions>>().Value;
 
+                            var sasl = shouterKafkaConfiguration.Sasl;
+                            var ssl = shouterKafkaConfiguration.Ssl;
+
                             k.Host(shouterKafkaConfiguration.BootstrapServers, h =>
                             {
-                                h.UseSasl(s =>
+                                if (sasl is not null)
                                 {
-                                    //s.Username = "your-username"; //TODO: add to config
-                                    //s.Password = "your-password"; //TODO: add to config
-                                    s.Mechanism = SaslMechanism.Plain;
-                                });
+                                    h.UseSasl(s =>
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(sasl.Username))
+                                            s.Username = sasl.Username;
 
-                                h.UseSsl(s =>
+                                        if (!string.IsNullOrWhiteSpace(sasl.Password))
+                                            s.Password = sasl.Password;
+
+                                        s.Mechanism = sasl.Mechanism;
+                                    });
+                                }
+
+                                if (ssl is not null)
                                 {
-                                    s.EnableSslCertificateVerification = false; //TODO: add to config
-                                });
+                                    h.UseSsl(s =>
+                                    {
+                                        s.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
+
+                                        if (!string.IsNullOrWhiteSpace(ssl.CaCertificateLocation))
+                                            s.CaLocation = ssl.CaCertificateLocation;
+
+                                        if (ssl.UseClientCertificate)
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(ssl.ClientCertificateLocation))
+                                                s.CertificateLocation = ssl.ClientCertificateLocation;
+
+                                            if (!string.IsNullOrWhiteSpace(ssl.KeystoreLocation))
+                                                s.KeystoreLocation = ssl.KeystoreLocation;
+
+                                            if (!string.IsNullOrWhiteSpace(ssl.KeystorePassword))
+                                                s.KeystorePassword = ssl.KeystorePassword;
+
+                                            if (!string.IsNullOrWhiteSpace(ssl.KeyLocation))
+                                                s.KeyLocation = ssl.KeyLocation;
+
+                                            if (!string.IsNullOrWhiteSpace(ssl.KeyPassword))
+                                                s.KeyPassword = ssl.KeyPassword;
+                                        }
+                                    });
+                                }
                             });
 
                             k.TopicEndpoint<ShouterReplyMessage>(shouterKafkaConfiguration.ReplyTopic, shouterKafkaConfiguration.ReplyGroup, e =>
@@ -126,7 +161,7 @@ namespace Rhinero.Shouter.Client
 
                                 //TODO: add error and skipped topics
 
-                                e.ConfigureRetry(retryOptions);                                
+                                e.ConfigureRetry(retryOptions);
                                 e.ConfigureConsumer<ShouterKafkaReplyConsumer>(context);
                             });
                         });

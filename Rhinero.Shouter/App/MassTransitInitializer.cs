@@ -3,7 +3,6 @@ using MassTransit;
 using Microsoft.Extensions.Options;
 using Rhinero.Shouter.Consumers;
 using Rhinero.Shouter.Contracts;
-using Rhinero.Shouter.Shared;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 using Rhinero.Shouter.Shared.RetryOptions;
@@ -56,7 +55,7 @@ namespace Rhinero.Shouter.App
                                 qc.ConfigureRetry(retryOptions);
                                 qc.ConfigureConsumer<ShouterRabbitMQConsumer>(context);
                             });
-                            
+
                             cfg.ReceiveEndpoint(rabbitMQConfiguration.ReplyQueue, qc =>
                             {
                                 qc.Durable = false;
@@ -86,19 +85,53 @@ namespace Rhinero.Shouter.App
                             {
                                 var retryOptions = context.GetRequiredService<IOptions<RetryOptions>>().Value;
 
+                                var sasl = kafkaConfiguration.Sasl;
+                                var ssl = kafkaConfiguration.Ssl;
+
                                 k.Host(kafkaConfiguration.BootstrapServers, h =>
                                 {
-                                    h.UseSasl(s =>
+                                    if (sasl is not null)
                                     {
-                                        //s.Username = "your-username"; //TODO: add to config
-                                        //s.Password = "your-password"; //TODO: add to config
-                                        s.Mechanism = SaslMechanism.Plain;
-                                    });
+                                        h.UseSasl(s =>
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(sasl.Username))
+                                                s.Username = sasl.Username;
 
-                                    h.UseSsl(s =>
+                                            if (!string.IsNullOrWhiteSpace(sasl.Password))
+                                                s.Password = sasl.Password;
+
+                                            s.Mechanism = sasl.Mechanism;
+                                        });
+                                    }
+
+                                    if (ssl is not null)
                                     {
-                                        s.EnableSslCertificateVerification = false; //TODO: add to config
-                                    });
+                                        h.UseSsl(s =>
+                                        {
+                                            s.EnableSslCertificateVerification = ssl.EnableSslCertificateVerification;
+
+                                            if (!string.IsNullOrWhiteSpace(ssl.CaCertificateLocation))
+                                                s.CaLocation = ssl.CaCertificateLocation;
+
+                                            if (ssl.UseClientCertificate)
+                                            {
+                                                if (!string.IsNullOrWhiteSpace(ssl.ClientCertificateLocation))
+                                                    s.CertificateLocation = ssl.ClientCertificateLocation;
+
+                                                if (!string.IsNullOrWhiteSpace(ssl.KeystoreLocation))
+                                                    s.KeystoreLocation = ssl.KeystoreLocation;
+
+                                                if (!string.IsNullOrWhiteSpace(ssl.KeystorePassword))
+                                                    s.KeystorePassword = ssl.KeystorePassword;
+
+                                                if (!string.IsNullOrWhiteSpace(ssl.KeyLocation))
+                                                    s.KeyLocation = ssl.KeyLocation;
+
+                                                if (!string.IsNullOrWhiteSpace(ssl.KeyPassword))
+                                                    s.KeyPassword = ssl.KeyPassword;
+                                            }
+                                        });
+                                    }
                                 });
 
                                 k.TopicEndpoint<ShouterMessage>(kafkaConfiguration.PublishTopic, kafkaConfiguration.PublishGroup, e =>

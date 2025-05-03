@@ -1,4 +1,5 @@
-﻿using Rhinero.Shouter.Shared;
+﻿using Confluent.Kafka;
+using Rhinero.Shouter.Shared;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rhinero.Shouter.App
@@ -18,5 +19,29 @@ namespace Rhinero.Shouter.App
         public int? ConcurrentMessageLimit { get; set; } = 16;
         public int? ConcurrentDeliveryLimit { get; set; } = 16;
         public ushort? ConcurrentConsumerLimit { get; set; } = 16;
+
+        public Sasl Sasl { get; set; }
+        public Ssl Ssl { get; set; }
+    }
+
+    internal class Sasl
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public SaslMechanism Mechanism { get; set; }
+    }
+
+    internal class Ssl
+    {
+        public bool EnableSslCertificateVerification { get; set; } = false;
+
+        public bool UseClientCertificate { get; set; } = false;
+
+        public string CaCertificateLocation { get; set; }
+        public string ClientCertificateLocation { get; set; }
+        public string KeyLocation { get; set; }
+        public string KeyPassword { get; set; }
+        public string KeystoreLocation { get; set; }
+        public string KeystorePassword { get; set; }
     }
 }

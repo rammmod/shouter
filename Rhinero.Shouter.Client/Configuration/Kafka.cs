@@ -1,4 +1,5 @@
-﻿using Rhinero.Shouter.Shared;
+﻿using Confluent.Kafka;
+using Rhinero.Shouter.Shared;
 using System.ComponentModel.DataAnnotations;
 
 namespace Rhinero.Shouter.Client.Configuration
@@ -20,5 +21,30 @@ namespace Rhinero.Shouter.Client.Configuration
 
         [Required]
         public Redis Redis { get; set; }
+
+        public Sasl Sasl { get; set; }
+        public Ssl Ssl { get; set; }
+    }
+
+    internal class Sasl
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public SaslMechanism Mechanism { get; set; } = SaslMechanism.Plain;
+
+    }
+
+    internal class Ssl
+    {
+        public bool EnableSslCertificateVerification { get; set; } = false;
+
+        public bool UseClientCertificate { get; set; } = false;
+
+        public string CaCertificateLocation { get; set; }
+        public string ClientCertificateLocation { get; set; }
+        public string KeyLocation { get; set; }
+        public string KeyPassword { get; set; }
+        public string KeystoreLocation { get; set; }
+        public string KeystorePassword { get; set; }
     }
 }

@@ -27,9 +27,9 @@ namespace Rhinero.Shouter.TestingAPI.Controllers
             var body = new
             {
                 Id = 1,
-                Name = "Art",
-                Surname = "Aleksanyan",
-                Age = 29
+                Name = "Test",
+                Surname = "Test",
+                Age = 10
             };
 
             var httpMessage = new HttpPayload()
