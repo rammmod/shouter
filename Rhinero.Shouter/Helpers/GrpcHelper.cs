@@ -1,5 +1,4 @@
 ﻿using Grpc.Core;
-using MassTransit;
 using Rhinero.Shouter.Contracts.Payloads.Grpc;
 using Rhinero.Shouter.Interfaces;
 using Rhinero.Shouter.Shared;
@@ -131,7 +130,7 @@ namespace Rhinero.Shouter.Helpers
                 }
                 else // Case: Task (non-generic), just await
                 {
-                    await(Task)result;
+                    await (Task)result;
                     response = null;
                 }
             }

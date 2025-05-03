@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Net.Mime;
 
 namespace Rhinero.Shouter.Contracts.Payloads.Http
 {

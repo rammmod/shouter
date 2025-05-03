@@ -8,7 +8,7 @@ namespace Rhinero.Shouter.ApiModels
         [RegularExpression("^[A-Z][\\w\\-]*\\.proto$")]
         public string Name { get; set; }
 
-        [Required] 
+        [Required]
         public string FileContent { get; set; }
     }
 }

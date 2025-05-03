@@ -1,7 +1,6 @@
 ﻿using Rhinero.Shouter.App;
 using Rhinero.Shouter.ExceptionHandler;
 using Rhinero.Shouter.Extensions;
-using Rhinero.Shouter.Interfaces;
 using Rhinero.Utils.Logging;
 
 namespace Rhinero.Shouter

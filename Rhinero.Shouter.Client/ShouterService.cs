@@ -171,7 +171,7 @@ namespace Rhinero.Shouter.Client
                 while (DateTime.UtcNow - start < duration)
                 {
                     shouterReplyMessageJson = await redisStorage.GetAsync(message.CorrelationId.ToString());
-                    
+
                     if (!string.IsNullOrWhiteSpace(shouterReplyMessageJson))
                         break;
 

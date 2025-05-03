@@ -23,10 +23,10 @@ namespace Rhinero.Shouter.Shared.RetryOptions
                     var expMissing = new List<string>();
                     if (options.MinIntervalSeconds is null)
                         expMissing.Add(nameof(options.MinIntervalSeconds));
-                    
+
                     if (options.MaxIntervalSeconds is null)
                         expMissing.Add(nameof(options.MaxIntervalSeconds));
-                    
+
                     if (options.IntervalDeltaSeconds is null)
                         expMissing.Add(nameof(options.IntervalDeltaSeconds));
 
@@ -38,7 +38,7 @@ namespace Rhinero.Shouter.Shared.RetryOptions
                     var incMissing = new List<string>();
                     if (options.InitialIntervalSeconds is null)
                         incMissing.Add(nameof(options.InitialIntervalSeconds));
-                    
+
                     if (options.IncrementSeconds is null)
                         incMissing.Add(nameof(options.IncrementSeconds));
 

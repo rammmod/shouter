@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Rhinero.Shouter.Shared.Exceptions.DynamicCompilation
+﻿namespace Rhinero.Shouter.Shared.Exceptions.DynamicCompilation
 {
     public sealed class CSharpFileGenerationException : Exception
     {

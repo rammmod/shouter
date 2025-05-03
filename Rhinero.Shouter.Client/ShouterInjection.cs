@@ -12,7 +12,6 @@ using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Shared.Exceptions.Shouter;
 using Rhinero.Shouter.Shared.IBuses;
 using Rhinero.Shouter.Shared.RetryOptions;
-using System.Runtime.Intrinsics.X86;
 
 namespace Rhinero.Shouter.Client
 {

@@ -1,9 +1,7 @@
-﻿using Confluent.Kafka;
-using MassTransit;
+﻿using MassTransit;
 using Rhinero.Shouter.Contracts;
 using Rhinero.Shouter.Interfaces;
 using Rhinero.Shouter.Shared.Extensions;
-using System.Threading;
 
 namespace Rhinero.Shouter.Consumers
 {
